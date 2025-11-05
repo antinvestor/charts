@@ -1,0 +1,328 @@
+# Default values for colony
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Service metadata
+serviceName: ""  # Required: e.g., profile, tenancy, ledger
+namespace: core  # Default namespace
+
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: ""  # Required: e.g., antinvestor/service-profile
+  tag: ""  # Required: e.g., v1.22.0
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - name: ghcr-auth
+
+# Deployment configuration
+replicaCount: 2
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
+
+# Graceful termination
+terminationGracePeriodSeconds: 60
+
+# Lifecycle hooks
+lifecycle:
+  preStop:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - sleep 10  # Allow time for load balancer de-registration
+
+# Pod annotations
+podAnnotations: {}
+
+# Security context
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: null  # Let the image define the user
+  runAsGroup: null
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 200m
+    memory: 400Mi
+
+# Service ports
+service:
+  type: ClusterIP
+  grpc:
+    enabled: true
+    port: 50051
+    targetPort: 50051
+  http:
+    enabled: true
+    port: 80
+    targetPort: 80
+
+# Health probes
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%  # Keep at least 50% of pods available
+  # maxUnavailable: 1  # OR: Allow at most 1 pod unavailable at a time
+  
+# Pod Anti-Affinity (spread pods across nodes)
+podAntiAffinity:
+  enabled: true
+  type: preferred  # or "required" for strict enforcement
+  topologyKey: kubernetes.io/hostname
+  weight: 100  # Weight for preferred anti-affinity (1-100)
+
+# Custom affinity rules (overrides podAntiAffinity if set)
+affinity: {}
+
+# Logging configuration
+logging:
+  enabled: true
+  level: info  # Options: debug, info, warn, error
+
+# OAuth2 configuration
+oauth2:
+  enabled: true
+  serviceUri: https://oauth2.chamamobile.com
+  adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
+  
+  # Auto-generate client secret (RECOMMENDED)
+  autoGenerateSecret: true  # Automatically creates secret if it doesn't exist
+  
+  # Secret reference (auto-populated if autoGenerateSecret is enabled)
+  clientSecretRef:
+    name: ""  # Leave empty to use: {serviceName}-oauth2-secret
+    key: client-secret  # Key name in the secret
+  
+  # Secret generator configuration
+  secretGenerator:
+    secretKey: client-secret  # Key name to use in generated secret
+    kubectlVersion: "1.28"  # kubectl image version for secret generation job
+  
+  # OR use clientSecret for development/testing (not recommended for production)
+  clientSecret: ""  # Direct value - use only for testing
+  
+  audience: ""  # Services this service can access
+  jwtVerifyAudience: ""  # This service's audience (defaults to service_{serviceName})
+
+# OpenTelemetry configuration
+opentelemetry:
+  enabled: true
+  serviceName: ""  # Defaults to serviceName
+  environment: production
+  protocol: grpc
+  endpoint: http://opentelemetry-collector.telemetry.svc.cluster.local:4317
+  insecure: true
+  compression: gzip
+  exporters:
+    traces: otlp
+    metrics: otlp
+    logs: otlp
+  metrics:
+    temporalityPreference: DELTA
+    histogramAggregation: BASE2_EXPONENTIAL_BUCKET_HISTOGRAM
+
+# Gateway API configuration
+gateway:
+  enabled: true
+  # Type: http or grpc
+  type: http
+  parentRef:
+    kind: Gateway
+    name: default
+    namespace: envoy-gateway-system
+    sectionName: https
+  # Hostname for external access
+  hostname: ""  # Required if gateway enabled: e.g., profile.chamamobile.com
+  # CORS settings for HTTPRoute
+  cors:
+    enabled: true
+    allowOrigins:
+      - "https://*"
+      - "http://localhost:5173"
+      - "http://localhost:8008"
+    allowMethods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowHeaders:
+      - Authorization
+      - Content-Type
+      - Accept
+      - Origin
+      - X-Requested-With
+    exposeHeaders:
+      - Content-Type
+      - Authorization
+    allowCredentials: true
+    maxAge: 86400
+
+# External DNS configuration
+externalDNS:
+  enabled: false
+  # DNS name for external access
+  dnsName: ""  # e.g., profile.chamamobile.com
+  recordTTL: 180
+  recordType: CNAME
+  targets:
+    - "prod.chamamobile.com"
+  cloudflareProxied: true
+
+# Network Policy
+networkPolicy:
+  enabled: false  # Enable in production for network isolation
+  ingressNamespace: envoy-gateway-system  # Namespace with ingress controller
+  datastoreNamespace: datastore  # Namespace with databases, NATS
+  telemetryNamespace: telemetry  # Namespace with OpenTelemetry collector
+  allowExternalEgress: true  # Allow HTTPS to external services (OAuth2, APIs)
+  # Additional custom ingress rules
+  additionalIngressRules: []
+  # Example:
+  # - from:
+  #     - namespaceSelector:
+  #         matchLabels:
+  #           name: monitoring
+  #   ports:
+  #     - protocol: TCP
+  #       port: 9090
+  # Additional custom egress rules
+  additionalEgressRules: []
+  # Example:
+  # - to:
+  #     - podSelector:
+  #         matchLabels:
+  #           app: external-api
+  #   ports:
+  #     - protocol: TCP
+  #       port: 8080
+
+# FluxCD Image Automation
+fluxcd:
+  enabled: true
+  imageRepository:
+    secretRef: ghcr-auth
+    interval: 5m0s
+  imagePolicy:
+    semver:
+      range: ">=v1.0.0"
+
+# Migration job configuration
+migration:
+  enabled: true
+  command: ["migrate"]
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 2
+  activeDeadlineSeconds: 1800
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+# Additional environment variables
+env: []
+# Example:
+# - name: CUSTOM_VAR
+#   value: "custom_value"
+# - name: SECRET_VAR
+#   valueFrom:
+#     secretKeyRef:
+#       name: my-secret
+#       key: my-key
+# - name: DATABASE_USERNAME
+#   valueFrom:
+#     secretKeyRef:
+#       name: hub-core-app
+#       key: username
+# - name: DATABASE_PASSWORD
+#   valueFrom:
+#     secretKeyRef:
+#       name: hub-core-app
+#       key: password
+# - name: DATABASE_URL
+#   value: "postgres://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@pooler-rw.datastore.svc.cluster.local:5432/myservice"
+
+# Additional volumes
+volumes: []
+# Example:
+# - name: config
+#   configMap:
+#     name: my-config
+
+# Additional volume mounts
+volumeMounts: []
+# Example:
+# - name: config
+#   mountPath: /etc/config
+
+# Additional labels
+labels: {}
+
+# Additional annotations
+annotations: {}

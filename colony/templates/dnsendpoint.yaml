@@ -1,0 +1,21 @@
+{{- if .Values.externalDNS.enabled }}
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: {{ include "colony.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "colony.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - dnsName: {{ include "colony.externalDNSName" . | quote }}
+      recordTTL: {{ .Values.externalDNS.recordTTL }}
+      recordType: {{ .Values.externalDNS.recordType }}
+      targets:
+        {{- toYaml .Values.externalDNS.targets | nindent 8 }}
+      {{- if .Values.externalDNS.cloudflareProxied }}
+      providerSpecific:
+        - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
+          value: "true"
+      {{- end }}
+{{- end }}

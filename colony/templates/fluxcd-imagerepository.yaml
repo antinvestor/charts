@@ -1,0 +1,14 @@
+{{- if .Values.fluxcd.enabled }}
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: {{ include "colony.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "colony.labels" . | nindent 4 }}
+spec:
+  secretRef:
+    name: {{ .Values.fluxcd.imageRepository.secretRef }}
+  image: {{ .Values.image.registry }}/{{ .Values.image.repository }}
+  interval: {{ .Values.fluxcd.imageRepository.interval }}
+{{- end }}

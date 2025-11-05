@@ -1,0 +1,40 @@
+{{- if and .Values.gateway.enabled (eq .Values.gateway.type "http") }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "colony.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "colony.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - kind: {{ .Values.gateway.parentRef.kind }}
+      name: {{ .Values.gateway.parentRef.name }}
+      namespace: {{ .Values.gateway.parentRef.namespace }}
+      sectionName: {{ .Values.gateway.parentRef.sectionName }}
+  hostnames:
+    - {{ include "colony.gatewayHostname" . | quote }}
+  rules:
+    - matches:
+        - path:
+            value: "/"
+      {{- if .Values.gateway.cors.enabled }}
+      filters:
+        - type: CORS
+          cors:
+            allowOrigins:
+              {{- toYaml .Values.gateway.cors.allowOrigins | nindent 14 }}
+            allowMethods:
+              {{- toYaml .Values.gateway.cors.allowMethods | nindent 14 }}
+            allowHeaders:
+              {{- toYaml .Values.gateway.cors.allowHeaders | nindent 14 }}
+            exposeHeaders:
+              {{- toYaml .Values.gateway.cors.exposeHeaders | nindent 14 }}
+            allowCredentials: {{ .Values.gateway.cors.allowCredentials }}
+            maxAge: {{ .Values.gateway.cors.maxAge }}
+      {{- end }}
+      backendRefs:
+        - name: {{ include "colony.fullname" . }}
+          port: {{ .Values.service.http.port }}
+          weight: 1
+{{- end }}

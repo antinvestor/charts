@@ -1,0 +1,10 @@
+.DS_Store
+.vscode
+.venv
+.ansible
+.idea
+credentials/contabo_secrets.json
+credentials/vault.secret
+credentials/ovh.conf
+cloud_images/
+talosconfig

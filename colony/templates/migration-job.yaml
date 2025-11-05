@@ -1,0 +1,64 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "colony.fullname" . }}-migration
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "colony.fullname" . }}
+    component: migration
+    {{- include "colony.labels" . | nindent 4 }}
+  annotations:
+    helm.toolkit.fluxcd.io/hook: pre-install,pre-upgrade
+    helm.toolkit.fluxcd.io/hook-delete-policy: before-hook-creation
+    helm.toolkit.fluxcd.io/hook-weight: "1"
+spec:
+  ttlSecondsAfterFinished: {{ .Values.migration.ttlSecondsAfterFinished }}
+  backoffLimit: {{ .Values.migration.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
+  parallelism: 1
+  completions: 1
+  template:
+    metadata:
+      labels:
+        app: {{ include "colony.fullname" . }}
+        component: migration
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+      containers:
+        - name: migration
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}" # {"$imagepolicy": "{{ .Values.namespace }}:{{ include "colony.fullname" . }}"}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.migration.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.migration.resources | nindent 12 }}
+          {{- if .Values.migration.command }}
+          args:
+            {{- toYaml .Values.migration.command | nindent 12 }}
+          {{- end }}
+          env:
+            - name: DO_MIGRATION
+              value: "true"
+            
+            # Additional environment variables for migration
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          
+          {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          {{- end }}
+      
+      {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- end }}
+{{- end }}

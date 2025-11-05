@@ -1,0 +1,108 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "colony.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "colony.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "colony.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow from Gateway/Ingress Controller
+    {{- if .Values.networkPolicy.ingressNamespace }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.ingressNamespace }}
+      {{- if or .Values.service.http.enabled .Values.service.grpc.enabled }}
+      ports:
+        {{- if .Values.service.http.enabled }}
+        - protocol: TCP
+          port: {{ .Values.service.http.targetPort }}
+        {{- end }}
+        {{- if .Values.service.grpc.enabled }}
+        - protocol: TCP
+          port: {{ .Values.service.grpc.targetPort }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    
+    # Allow from same namespace (service-to-service)
+    - from:
+        - podSelector: {}
+      {{- if or .Values.service.http.enabled .Values.service.grpc.enabled }}
+      ports:
+        {{- if .Values.service.http.enabled }}
+        - protocol: TCP
+          port: {{ .Values.service.http.targetPort }}
+        {{- end }}
+        {{- if .Values.service.grpc.enabled }}
+        - protocol: TCP
+          port: {{ .Values.service.grpc.targetPort }}
+        {{- end }}
+      {{- end }}
+    
+    # Additional ingress rules
+    {{- with .Values.networkPolicy.additionalIngressRules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    
+    # Allow to datastore namespace (databases, NATS)
+    {{- if .Values.networkPolicy.datastoreNamespace }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.datastoreNamespace }}
+    {{- end }}
+    
+    # Allow to same namespace (service-to-service)
+    - to:
+        - podSelector: {}
+    
+    # Allow to telemetry
+    {{- if .Values.networkPolicy.telemetryNamespace }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.telemetryNamespace }}
+      ports:
+        - protocol: TCP
+          port: 4317  # OTLP gRPC
+        - protocol: TCP
+          port: 4318  # OTLP HTTP
+    {{- end }}
+    
+    # Allow to external services on HTTPS (for OAuth2, external APIs)
+    {{- if .Values.networkPolicy.allowExternalEgress }}
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    {{- end }}
+    
+    # Additional egress rules
+    {{- with .Values.networkPolicy.additionalEgressRules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,193 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "colony.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "colony.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "colony.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "colony.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      {{- else if .Values.podAntiAffinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          {{- if eq .Values.podAntiAffinity.type "required" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - {{ include "colony.fullname" . }}
+              topologyKey: {{ .Values.podAntiAffinity.topologyKey }}
+          {{- else }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.podAntiAffinity.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - {{ include "colony.fullname" . }}
+                topologyKey: {{ .Values.podAntiAffinity.topologyKey }}
+          {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ include "colony.fullname" . }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}" # {"$imagepolicy": "{{ .Values.namespace }}:{{ include "colony.fullname" . }}"}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          ports:
+            {{- if .Values.service.grpc.enabled }}
+            - name: grpc
+              containerPort: {{ .Values.service.grpc.targetPort }}
+            {{- end }}
+            {{- if .Values.service.http.enabled }}
+            - name: http
+              containerPort: {{ .Values.service.http.targetPort }}
+            {{- end }}
+          {{- if .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle | nindent 12 }}
+          {{- end }}
+          env:
+            # Logging configuration
+            {{- if .Values.logging.enabled }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logging.level }}
+            {{- end }}
+            
+            # Service ports
+            {{- if .Values.service.http.enabled }}
+            - name: HTTP_PORT
+              value: {{ .Values.service.http.targetPort | quote }}
+            {{- end }}
+            {{- if .Values.service.grpc.enabled }}
+            - name: GRPC_PORT
+              value: {{ .Values.service.grpc.targetPort | quote }}
+            {{- end }}
+            
+            # OAuth2 configuration
+            {{- if .Values.oauth2.enabled }}
+            - name: OAUTH2_SERVICE_URI
+              value: {{ .Values.oauth2.serviceUri }}
+            - name: OAUTH2_SERVICE_ADMIN_URI
+              value: {{ .Values.oauth2.adminUri }}
+            {{- if or .Values.oauth2.clientSecretRef.name .Values.oauth2.autoGenerateSecret }}
+            - name: OAUTH2_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "colony.oauth2SecretName" . }}
+                  key: {{ .Values.oauth2.clientSecretRef.key | default .Values.oauth2.secretGenerator.secretKey }}
+            {{- else if .Values.oauth2.clientSecret }}
+            - name: OAUTH2_SERVICE_CLIENT_SECRET
+              value: {{ .Values.oauth2.clientSecret }}
+            {{- end }}
+            {{- if .Values.oauth2.audience }}
+            - name: OAUTH2_SERVICE_AUDIENCE
+              value: {{ .Values.oauth2.audience }}
+            {{- end }}
+            - name: OAUTH2_JWT_VERIFY_AUDIENCE
+              value: {{ include "colony.oauth2JwtAudience" . }}
+            {{- end }}
+            
+            # OpenTelemetry configuration
+            {{- if .Values.opentelemetry.enabled }}
+            # Kubernetes metadata via Downward API
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: K8S_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: OTEL_SERVICE_NAME
+              value: {{ include "colony.otelServiceName" . | quote }}
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name={{ include "colony.otelServiceName" . }},service.namespace={{ .Values.namespace }},service.version={{ .Values.image.tag }},deployment.environment={{ .Values.opentelemetry.environment }},k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.deployment.name={{ include "colony.fullname" . }},k8s.pod.name=$(K8S_POD_NAME),k8s.pod.ip=$(K8S_POD_IP),k8s.node.name=$(K8S_NODE_NAME)"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: {{ .Values.opentelemetry.protocol }}
+            - name: OTEL_TRACES_EXPORTER
+              value: {{ .Values.opentelemetry.exporters.traces }}
+            - name: OTEL_METRICS_EXPORTER
+              value: {{ .Values.opentelemetry.exporters.metrics }}
+            - name: OTEL_LOGS_EXPORTER
+              value: {{ .Values.opentelemetry.exporters.logs }}
+            - name: OTEL_EXPORTER_OTLP_COMPRESSION
+              value: {{ .Values.opentelemetry.compression }}
+            - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+              value: {{ .Values.opentelemetry.metrics.temporalityPreference }}
+            - name: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
+              value: {{ .Values.opentelemetry.metrics.histogramAggregation }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.opentelemetry.endpoint }}
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: {{ .Values.opentelemetry.insecure | quote }}
+            {{- end }}
+            
+            # Additional environment variables
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
