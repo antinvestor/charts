@@ -1,0 +1,21 @@
+apiVersion: v1
+entries:
+  colony:
+  - apiVersion: v2
+    appVersion: 1.1.0
+    created: "2025-11-05T21:44:37.985141909Z"
+    description: A production-hardened Helm chart for deploying Colony microservices
+      with enterprise-grade security and reliability
+    digest: 97b5ff897b20b5f7819715a07cba6c8a9004c8609c8fe7b73d20c2411ac1de1c
+    keywords:
+    - colony
+    - microservice
+    - kubernetes
+    maintainers:
+    - name: Antinvestor Team
+    name: colony
+    type: application
+    urls:
+    - https://github.com/antinvestor/charts/releases/download/colony-1.1.0/colony-1.1.0.tgz
+    version: 1.1.0
+generated: "2025-11-05T21:44:37.985151277Z"
