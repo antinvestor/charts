@@ -10,9 +10,11 @@ on:
 
 jobs:
   release:
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required for pushing the Helm charts to the gh-pages branch
+      packages: write # Required for GHCR access
+      id-token: write # Required for signing
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,20 +26,18 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Create gh-pages branch if not exists
-        run: |
-          if ! git ls-remote --heads origin gh-pages | grep gh-pages; then
-            echo "Creating gh-pages branch..."
-            git checkout --orphan gh-pages
-            git reset --hard
-            git commit --allow-empty -m "Initialize gh-pages branch"
-            git push origin gh-pages
-            git checkout main
-          else
-            echo "gh-pages branch already exists"
-          fi
+      - name: Set up Helm
+        uses: azure/setup-helm@v4 # v4.3.1
+        with:
+          version: v3.16.2
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_KEY: helm-charts+no-reply@antinvestor.com
+#          CR_KEYRING: /tmp/keyring.gpg
+#          CR_PASSPHRASE_FILE: /tmp/passphrase-file.txt
+          CR_SIGN: true
+          CR_SKIP_EXISTING: true
+          CR_GENERATE_RELEASE_NOTES: true
