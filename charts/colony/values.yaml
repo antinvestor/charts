@@ -150,7 +150,7 @@ oauth2:
     kubectlVersion: "1.28"  # kubectl image version for secret generation job
 
   audience: ""  # Services this service can access
-  jwtVerifyAudience: ""  # This service's audience (defaults to service_{serviceName})
+  jwtVerifyAudience: ""  # This service's audience (defaults to {serviceName})
 
 # OpenTelemetry configuration
 opentelemetry:
@@ -221,7 +221,7 @@ externalDNS:
 # Network Policy
 networkPolicy:
   enabled: false  # Enable in production for network isolation
-  ingressNamespace: envoy-gateway-system  # Namespace with ingress controller
+  ingressNamespace: system-gateway  # Namespace with ingress controller
   datastoreNamespace: datastore  # Namespace with databases, NATS
   telemetryNamespace: telemetry  # Namespace with OpenTelemetry collector
   allowExternalEgress: true  # Allow HTTPS to external services (OAuth2, APIs)
@@ -254,12 +254,13 @@ fluxcd:
     interval: 5m0s
   imagePolicy:
     semver:
-      range: ">=v1.0.0"
+      range: ">=v0.0.1"
 
 # Migration job configuration
 migration:
   enabled: true
-  command: ["migrate"]
+  args: ["migrate"]
+  env: []
   ttlSecondsAfterFinished: 300
   backoffLimit: 2
   activeDeadlineSeconds: 1800

@@ -37,16 +37,16 @@ spec:
             {{- toYaml .Values.migration.securityContext | nindent 12 }}
           resources:
             {{- toYaml .Values.migration.resources | nindent 12 }}
-          {{- if .Values.migration.command }}
+          {{- if .Values.migration.args }}
           args:
-            {{- toYaml .Values.migration.command | nindent 12 }}
+            {{- toYaml .Values.migration.args | nindent 12 }}
           {{- end }}
           env:
             - name: DO_MIGRATION
               value: "true"
             
             # Additional environment variables for migration
-            {{- with .Values.env }}
+            {{- with .Values.migration.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           

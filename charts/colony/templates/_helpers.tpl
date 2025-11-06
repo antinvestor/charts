@@ -53,7 +53,7 @@ Application service name
 OAuth2 JWT Verify Audience
 */}}
 {{- define "colony.oauth2JwtAudience" -}}
-{{- .Values.oauth2.jwtVerifyAudience | default (printf "service_%s" .Values.serviceName) }}
+{{- .Values.oauth2.jwtVerifyAudience | default (printf .Values.serviceName) }}
 {{- end }}
 
 {{/*
