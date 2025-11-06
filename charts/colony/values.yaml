@@ -148,10 +148,7 @@ oauth2:
   secretGenerator:
     secretKey: client-secret  # Key name to use in generated secret
     kubectlVersion: "1.28"  # kubectl image version for secret generation job
-  
-  # OR use clientSecret for development/testing (not recommended for production)
-  clientSecret: ""  # Direct value - use only for testing
-  
+
   audience: ""  # Services this service can access
   jwtVerifyAudience: ""  # This service's audience (defaults to service_{serviceName})
 

@@ -43,9 +43,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-OpenTelemetry service name
+Application service name
 */}}
-{{- define "colony.otelServiceName" -}}
+{{- define "colony.serviceName" -}}
 {{- .Values.opentelemetry.serviceName | default .Values.serviceName }}
 {{- end }}
 

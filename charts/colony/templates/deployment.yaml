@@ -116,6 +116,8 @@ spec:
               value: {{ .Values.oauth2.serviceUri }}
             - name: OAUTH2_SERVICE_ADMIN_URI
               value: {{ .Values.oauth2.adminUri }}
+            - name: OAUTH2_SERVICE_CLIENT_ID
+              value: {{ include "colony.fullname" . }}
             {{- if or .Values.oauth2.clientSecretRef.name .Values.oauth2.autoGenerateSecret }}
             - name: OAUTH2_SERVICE_CLIENT_SECRET
               valueFrom:
@@ -154,9 +156,9 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: OTEL_SERVICE_NAME
-              value: {{ include "colony.otelServiceName" . | quote }}
+              value: {{ include "colony.fullname" . | quote }}
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: "service.name={{ include "colony.otelServiceName" . }},service.namespace={{ .Values.namespace }},service.version={{ .Values.image.tag }},deployment.environment={{ .Values.opentelemetry.environment }},k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.deployment.name={{ include "colony.fullname" . }},k8s.pod.name=$(K8S_POD_NAME),k8s.pod.ip=$(K8S_POD_IP),k8s.node.name=$(K8S_NODE_NAME)"
+              value: "service.name={{ include "colony.fullname" . }},service.namespace={{ .Values.namespace }},service.version={{ .Values.image.tag }},deployment.environment={{ .Values.opentelemetry.environment }},k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.deployment.name={{ include "colony.fullname" . }},k8s.pod.name=$(K8S_POD_NAME),k8s.pod.ip=$(K8S_POD_IP),k8s.node.name=$(K8S_NODE_NAME)"
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: {{ .Values.opentelemetry.protocol }}
             - name: OTEL_TRACES_EXPORTER
