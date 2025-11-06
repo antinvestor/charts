@@ -40,7 +40,7 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_KEY: helm-charts+no-reply@antinvestor.com
+          CR_KEY: helm-charts+info@antinvestor.com
           CR_KEYRING: /tmp/keyring.gpg
           CR_PASSPHRASE_FILE: /tmp/passphrase-file.txt
           CR_SIGN: true
