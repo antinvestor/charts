@@ -37,7 +37,7 @@ jobs:
           version: latest
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.8.1
+        uses: helm/chart-releaser-action@v1.7.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_KEY: helm-charts+info@antinvestor.com
