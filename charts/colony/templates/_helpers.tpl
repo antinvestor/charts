@@ -13,8 +13,8 @@ Common labels
 {{- define "colony.labels" -}}
 helm.sh/chart: {{ include "colony.chart" . }}
 {{ include "colony.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- if .Values.image.tag }}
+app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- with .Values.labels }}

@@ -1,9 +1,9 @@
 apiVersion: v2
 name: colony
-description: A production-hardened Helm chart for deploying Colony microservices with enterprise-grade security and reliability
+description: A production-hardened Helm chart for deploying Ant Investor microservices
 type: application
-version: 1.2.0
-appVersion: "1.2.0"
+version: 1.3.0
+appVersion: "0.0.1"
 keywords:
   - colony
   - microservice
