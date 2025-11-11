@@ -30,7 +30,7 @@ spec:
       {{- end }}
       restartPolicy: Never
       containers:
-        - name: migration
+        - name: "{{ .Release.Name }}-migration"
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
