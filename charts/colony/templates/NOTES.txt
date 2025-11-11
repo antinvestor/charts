@@ -1,10 +1,10 @@
-Thank you for installing {{ include "colony.fullname" . }}!
+Thank you for installing {{ .Release.Name }}!
 
 Your release is named {{ .Release.Name }}.
 
 Service Information:
-  Name: {{ include "colony.fullname" . }}
-  Namespace: {{ .Values.namespace }}
+  Name: {{ .Release.Name }}
+  Namespace: {{ .Release.Namespace }}
   Image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
 
 Resources Deployed:
@@ -17,7 +17,7 @@ Resources Deployed:
   ✓ PodDisruptionBudget
 {{- end }}
 {{- if .Values.gateway.enabled }}
-  ✓ {{ if eq .Values.gateway.type "http" }}HTTPRoute{{ else }}GRPCRoute{{ end }} ({{ include "colony.gatewayHostname" . }})
+  ✓ {{ if eq .Values.gateway.type "http" }}HTTPRoute{{ else }}GRPCRoute{{ end }} ({{ .Values.gateway.hostname }})
 {{- end }}
 {{- if .Values.externalDNS.enabled }}
   ✓ DNSEndpoint ({{ include "colony.externalDNSName" . }})
@@ -31,13 +31,13 @@ Resources Deployed:
 
 Endpoints:
 {{- if .Values.service.http.enabled }}
-  HTTP: {{ include "colony.fullname" . }}.{{ .Values.namespace }}:{{ .Values.service.http.port }}
+  HTTP: {{ .Release.Name }}.{{ .Release.Namespace }}:{{ .Values.service.http.port }}
 {{- end }}
 {{- if .Values.service.grpc.enabled }}
-  gRPC: {{ include "colony.fullname" . }}.{{ .Values.namespace }}:{{ .Values.service.grpc.port }}
+  gRPC: {{ .Release.Name }}.{{ .Release.Namespace }}:{{ .Values.service.grpc.port }}
 {{- end }}
 {{- if .Values.gateway.enabled }}
-  External: https://{{ include "colony.gatewayHostname" . }}
+  External: https://{{ .Values.gateway.hostname }}
 {{- end }}
 
 Configuration:
@@ -49,19 +49,19 @@ Configuration:
 {{- end }}
 
 To check the status of your deployment:
-  kubectl get deployment -n {{ .Values.namespace }} {{ include "colony.fullname" . }}
+  kubectl get deployment -n {{ .Release.Namespace }} {{ .Release.Name }}
 
 To view the pods:
-  kubectl get pods -n {{ .Values.namespace }} -l app.kubernetes.io/name={{ include "colony.fullname" . }}
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ .Release.Name }}
 
 To view the logs:
-  kubectl logs -n {{ .Values.namespace }} -l app.kubernetes.io/name={{ include "colony.fullname" . }} --tail=100 -f
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ .Release.Name }} --tail=100 -f
 
 {{- if .Values.migration.enabled }}
 
 To check migration job status:
-  kubectl get job -n {{ .Values.namespace }} {{ include "colony.fullname" . }}-migration
-  kubectl logs -n {{ .Values.namespace }} job/{{ include "colony.fullname" . }}-migration
+  kubectl get job -n {{ .Release.Namespace }} {{ .Release.Name }}-migration
+  kubectl logs -n {{ .Release.Namespace }} job/{{ .Release.Name }}-migration
 {{- end }}
 
 For more information, visit: https://github.com/antinvestor/service_deployments

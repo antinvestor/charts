@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "colony.fullname" . }}
-  namespace: {{ .Values.namespace }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "colony.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
@@ -45,7 +45,7 @@ spec:
                   - key: app.kubernetes.io/name
                     operator: In
                     values:
-                      - {{ include "colony.fullname" . }}
+                      - {{ .Release.Name }}
               topologyKey: {{ .Values.podAntiAffinity.topologyKey }}
           {{- else }}
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -56,13 +56,13 @@ spec:
                     - key: app.kubernetes.io/name
                       operator: In
                       values:
-                        - {{ include "colony.fullname" . }}
+                        - {{ .Release.Name }}
                 topologyKey: {{ .Values.podAntiAffinity.topologyKey }}
           {{- end }}
       {{- end }}
       containers:
-        - name: {{ include "colony.fullname" . }}
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}" # {"$imagepolicy": "{{ .Values.namespace }}:{{ include "colony.fullname" . }}"}
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -117,23 +117,23 @@ spec:
             - name: OAUTH2_SERVICE_ADMIN_URI
               value: {{ .Values.oauth2.adminUri }}
             - name: OAUTH2_SERVICE_CLIENT_ID
-              value: {{ include "colony.fullname" . }}
-            {{- if or .Values.oauth2.clientSecretRef.name .Values.oauth2.autoGenerateSecret }}
+              value: {{ .Release.Name }}
+            {{- if .Values.oauth2.clientSecret }}
+            - name: OAUTH2_SERVICE_CLIENT_SECRET
+              value: {{ .Values.oauth2.clientSecret }}
+            {{- else }}
             - name: OAUTH2_SERVICE_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "colony.oauth2SecretName" . }}
-                  key: {{ .Values.oauth2.clientSecretRef.key | default .Values.oauth2.secretGenerator.secretKey }}
-            {{- else if .Values.oauth2.clientSecret }}
-            - name: OAUTH2_SERVICE_CLIENT_SECRET
-              value: {{ .Values.oauth2.clientSecret }}
+                  name: {{ .Values.oauth2.clientSecretRef.name | default (printf "%s-oauth2-cli" .Release.Name) }}
+                  key: {{ .Values.oauth2.clientSecretRef.key }}
             {{- end }}
             {{- if .Values.oauth2.audience }}
             - name: OAUTH2_SERVICE_AUDIENCE
               value: {{ .Values.oauth2.audience }}
             {{- end }}
             - name: OAUTH2_JWT_VERIFY_AUDIENCE
-              value: {{ include "colony.oauth2JwtAudience" . }}
+              value: {{ .Values.oauth2.jwtVerifyAudience }}
             {{- end }}
             
             # OpenTelemetry configuration
@@ -156,9 +156,9 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: OTEL_SERVICE_NAME
-              value: {{ include "colony.fullname" . | quote }}
+              value: {{ .Release.Name | quote }}
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: "service.name={{ include "colony.fullname" . }},service.namespace={{ .Values.namespace }},service.version={{ .Values.image.tag }},deployment.environment={{ .Values.opentelemetry.environment }},k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.deployment.name={{ include "colony.fullname" . }},k8s.pod.name=$(K8S_POD_NAME),k8s.pod.ip=$(K8S_POD_IP),k8s.node.name=$(K8S_NODE_NAME)"
+              value: "service.name={{ .Release.Name }},service.namespace={{ .Release.Namespace }},service.version={{ .Values.image.tag }},deployment.environment={{ .Values.opentelemetry.environment }},k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.deployment.name={{ .Release.Name }},k8s.pod.name=$(K8S_POD_NAME),k8s.pod.ip=$(K8S_POD_IP),k8s.node.name=$(K8S_NODE_NAME)"
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: {{ .Values.opentelemetry.protocol }}
             - name: OTEL_TRACES_EXPORTER

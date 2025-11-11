@@ -101,8 +101,8 @@ Create `templates/networkpolicy.yaml`:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "colony.fullname" . }}
-  namespace: {{ .Values.namespace }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "colony.labels" . | nindent 4 }}
 spec:
@@ -351,7 +351,7 @@ spec:
                   - key: app.kubernetes.io/name
                     operator: In
                     values:
-                      - {{ include "colony.fullname" . }}
+                      - {{ .Release.Name }}
               topologyKey: kubernetes.io/hostname
           {{- else }}
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -362,7 +362,7 @@ spec:
                     - key: app.kubernetes.io/name
                       operator: In
                       values:
-                        - {{ include "colony.fullname" . }}
+                        - {{ .Release.Name }}
                 topologyKey: kubernetes.io/hostname
           {{- end }}
       {{- end }}
@@ -432,7 +432,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       containers:
-        - name: {{ include "colony.fullname" . }}
+        - name: {{ .Release.Name }}
           # ... existing config ...
           {{- if .Values.lifecycle }}
           lifecycle:
@@ -523,8 +523,8 @@ Update `templates/pdb.yaml`:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "colony.fullname" . }}
-  namespace: {{ .Values.namespace }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "colony.labels" . | nindent 4 }}
 spec:

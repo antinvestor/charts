@@ -65,7 +65,7 @@ resources:
 service:
   type: ClusterIP
   grpc:
-    enabled: true
+    enabled: false
     port: 50051
     targetPort: 50051
   http:
@@ -133,21 +133,13 @@ logging:
 # OAuth2 configuration
 oauth2:
   enabled: true
-  serviceUri: https://oauth2.chamamobile.com
+  serviceUri: https://oauth2.antinvestor.com
   adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
-  
-  # Auto-generate client secret (RECOMMENDED)
-  autoGenerateSecret: true  # Automatically creates secret if it doesn't exist
-  
+
   # Secret reference (auto-populated if autoGenerateSecret is enabled)
   clientSecretRef:
-    name: ""  # Leave empty to use: {serviceName}-oauth2-secret
+    name: ""  # Leave empty to use: {release-name}-oauth2-cli
     key: client-secret  # Key name in the secret
-  
-  # Secret generator configuration
-  secretGenerator:
-    secretKey: client-secret  # Key name to use in generated secret
-    kubectlVersion: "1.28"  # kubectl image version for secret generation job
 
   audience: ""  # Services this service can access
   jwtVerifyAudience: ""  # This service's audience (defaults to {serviceName})
@@ -183,7 +175,7 @@ gateway:
   hostname: ""  # Required if gateway enabled: e.g., profile.chamamobile.com
   # CORS settings for HTTPRoute
   cors:
-    enabled: true
+    enabled: false
     allowOrigins:
       - "https://*"
       - "http://localhost:5173"
@@ -211,11 +203,11 @@ gateway:
 externalDNS:
   enabled: false
   # DNS name for external access
-  dnsName: ""  # e.g., profile.chamamobile.com
+  dnsName: ""  # e.g., profile.antinvestor.com
   recordTTL: 180
   recordType: CNAME
   targets:
-    - "prod.chamamobile.com"
+    - "prod.antinvestor.com"
   cloudflareProxied: true
 
 # Network Policy
@@ -258,7 +250,7 @@ fluxcd:
 
 # Migration job configuration
 migration:
-  enabled: true
+  enabled: false
   args: ["migrate"]
   env: []
   ttlSecondsAfterFinished: 300

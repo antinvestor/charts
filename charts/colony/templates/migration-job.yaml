@@ -2,10 +2,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "colony.fullname" . }}-migration
-  namespace: {{ .Values.namespace }}
+  name: {{ .Release.Name }}-migration
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ include "colony.fullname" . }}
+    app: {{ .Release.Name }}
     component: migration
     {{- include "colony.labels" . | nindent 4 }}
   annotations:
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ include "colony.fullname" . }}
+        app: {{ .Release.Name }}
         component: migration
     spec:
       {{- with .Values.image.pullSecrets }}
@@ -31,7 +31,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: migration
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}" # {"$imagepolicy": "{{ .Values.namespace }}:{{ include "colony.fullname" . }}"}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.migration.securityContext | nindent 12 }}
