@@ -30,3 +30,14 @@ app.kubernetes.io/name: {{ .Release.Name }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+
+{{/*
+ServiceAccount name
+*/}}
+{{- define "colony.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default .Release.Name .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}

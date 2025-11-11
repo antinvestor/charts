@@ -1,8 +1,8 @@
 # Production-hardened values for Colony Helm Chart
 # This example demonstrates all security and reliability improvements
-
-serviceName: myservice
-namespace: core
+# 
+# NOTE: The release name (helm install <release-name>) is used as the service name
+# Example: helm install myservice ./colony -f values-production.yaml -n core
 
 # Image configuration
 image:
@@ -128,19 +128,18 @@ logging:
   enabled: true
   level: info
 
-# OAuth2 with auto-generation (SECURE & EASY)
+# OAuth2 configuration
+# Create the secret before deployment:
+# kubectl create secret generic myservice-oauth2-cli \
+#   --from-literal=client-secret='your-secret-here' -n core
 oauth2:
   enabled: true
-  serviceUri: https://oauth2.chamamobile.com
+  serviceUri: https://oauth2.antinvestor.com
   adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
   
-  # Auto-generate secret (RECOMMENDED - enabled by default)
-  autoGenerateSecret: true
-  # This will create secret: myservice-oauth2-secret automatically
-  
-  # Secret reference (auto-populated when autoGenerateSecret is true)
+  # Secret reference (defaults to {release-name}-oauth2-cli)
   clientSecretRef:
-    name: ""  # Leave empty to use: {serviceName}-oauth2-secret
+    name: ""  # Leave empty to use default: myservice-oauth2-cli
     key: client-secret
   
   audience: "service_notifications,service_profile"
@@ -171,12 +170,12 @@ gateway:
     name: default
     namespace: envoy-gateway-system
     sectionName: https
-  hostname: myservice.chamamobile.com
+  hostname: myservice.antinvestor.com  # Required: Set your hostname
   cors:
     enabled: true
     allowOrigins:
       - "https://*"
-      - "https://app.chamamobile.com"
+      - "https://app.antinvestor.com"
     allowMethods:
       - GET
       - POST
@@ -196,14 +195,13 @@ gateway:
     allowCredentials: true
     maxAge: 86400
 
-# External DNS
+# External DNS (uses gateway.hostname by default)
 externalDNS:
   enabled: true
-  dnsName: myservice.chamamobile.com
   recordTTL: 180
   recordType: CNAME
   targets:
-    - "prod.chamamobile.com"
+    - "prod.antinvestor.com"
   cloudflareProxied: true
 
 # Network Policy (ENABLE IN PRODUCTION)
@@ -230,7 +228,7 @@ fluxcd:
 # Migration job
 migration:
   enabled: true
-  command: ["migrate"]
+  args: ["migrate"]  # Container arguments
   ttlSecondsAfterFinished: 300
   backoffLimit: 2
   activeDeadlineSeconds: 1800

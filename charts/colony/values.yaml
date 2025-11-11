@@ -2,18 +2,26 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# Service metadata
-serviceName: ""  # Required: e.g., profile, tenancy, ledger
-namespace: core  # Default namespace
+# NOTE: The release name (helm install <release-name>) will be used as the service name
+# Example: helm install myservice ./colony -n <namespace>
+# This creates a service named 'myservice' in the specified namespace
 
 # Image configuration
 image:
   registry: ghcr.io
-  repository: ""  # Required: e.g., antinvestor/service-profile
-  tag: ""  # Required: e.g., v1.22.0
+  repository: "antinvestor/example-service"  # Required: Set to your service repository
+  tag: "v1.0.0"  # Required: Set to your service version
   pullPolicy: IfNotPresent
   pullSecrets:
     - name: ghcr-auth
+
+# ServiceAccount configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/IAM_ROLE_NAME
+  name: ""  # Defaults to release name
+  imagePullSecrets: []  # Override image pull secrets for ServiceAccount
 
 # Deployment configuration
 replicaCount: 2
@@ -136,18 +144,22 @@ oauth2:
   serviceUri: https://oauth2.antinvestor.com
   adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
 
-  # Secret reference (auto-populated if autoGenerateSecret is enabled)
+  # Secret reference for OAuth2 client credentials
+  # Create the secret manually before deployment:
+  # kubectl create secret generic <release-name>-oauth2-cli \
+  #   --from-literal=client-secret='your-secret-here' \
+  #   -n <namespace>
   clientSecretRef:
     name: ""  # Leave empty to use: {release-name}-oauth2-cli
     key: client-secret  # Key name in the secret
 
   audience: ""  # Services this service can access
-  jwtVerifyAudience: ""  # This service's audience (defaults to {serviceName})
+  jwtVerifyAudience: ""  # This service's audience (defaults to {release-name})
 
 # OpenTelemetry configuration
 opentelemetry:
   enabled: true
-  serviceName: ""  # Defaults to serviceName
+  serviceName: ""  # Defaults to release name
   environment: production
   protocol: grpc
   endpoint: http://opentelemetry-collector.telemetry.svc.cluster.local:4317
@@ -171,8 +183,8 @@ gateway:
     name: default
     namespace: envoy-gateway-system
     sectionName: https
-  # Hostname for external access
-  hostname: ""  # Required if gateway enabled: e.g., profile.chamamobile.com
+  # Hostname for external access (also used for externalDNS if enabled)
+  hostname: ""  # Required if gateway enabled: e.g., myservice.antinvestor.com
   # CORS settings for HTTPRoute
   cors:
     enabled: false
@@ -202,8 +214,7 @@ gateway:
 # External DNS configuration
 externalDNS:
   enabled: false
-  # DNS name for external access
-  dnsName: ""  # e.g., profile.antinvestor.com
+  # DNS name defaults to gateway.hostname
   recordTTL: 180
   recordType: CNAME
   targets:
@@ -274,6 +285,14 @@ migration:
         - ALL
     seccompProfile:
       type: RuntimeDefault
+
+# Environment variables from ConfigMaps and Secrets
+envFrom: []
+# Example:
+# - configMapRef:
+#     name: app-config
+# - secretRef:
+#     name: app-secrets
 
 # Additional environment variables
 env: []

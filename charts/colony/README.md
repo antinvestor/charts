@@ -1,203 +1,159 @@
 # Colony Helm Chart
 
-A simplified, flexible Helm chart for deploying microservices on Kubernetes with standardized patterns for OAuth2, OpenTelemetry, and Kubernetes-native features.
+Production-ready Helm chart for deploying microservices on Kubernetes with standardized patterns for OAuth2, OpenTelemetry, and Gateway API.
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Examples](#examples)
-- [Resource Templates](#resource-templates)
-- [Advanced Usage](#advanced-usage)
-
-## Overview
-
-Colony is a lightweight Helm chart focused on Kubernetes orchestration and core observability for microservices. It generates essential Kubernetes resources while allowing applications to manage their own integration patterns.
-
-**Generated Resources:**
-
-- **Deployment** with security contexts, health probes, and resource limits
-- **Service** (ClusterIP) with gRPC and HTTP ports
-- **HorizontalPodAutoscaler** for auto-scaling
-- **PodDisruptionBudget** for high availability
-- **Gateway Routes** (HTTPRoute or GRPCRoute) for external access
-- **DNSEndpoint** for external DNS configuration
-- **FluxCD** ImageRepository and ImagePolicy for GitOps
-- **Migration Job** for database migrations (pre-install/pre-upgrade)
-
-## Features
-
-### Core Capabilities
-
-✅ **Kubernetes Orchestration**
-- Production-ready Deployment with security contexts
-- Service discovery via ClusterIP services
-- Auto-scaling with HorizontalPodAutoscaler
-- High availability with PodDisruptionBudget
-- Rolling updates with zero-downtime deployments
-- Pod anti-affinity for node distribution
-- Graceful termination (60s grace period)
-
-✅ **OAuth2 & Security**
-- Built-in Hydra OAuth2 integration
-- JWT audience verification
-- Service-to-service authentication
-- Secure container contexts (non-root, dropped capabilities)
-- Kubernetes Secret references for sensitive data
-- Network policies for traffic isolation
-
-✅ **Observability**
-- OpenTelemetry configuration (traces, metrics, logs)
-- Kubernetes metadata injection (pod name, IP, node)
-- Standardized resource attributes
-- Integration with OpenTelemetry Collector
-
-✅ **Gateway API**
-- Support for both HTTPRoute and GRPCRoute
-- CORS configuration for HTTP services
-- External DNS integration with Cloudflare
-- TLS/HTTPS termination
-
-✅ **GitOps & Automation**
-- FluxCD image automation
-- Helm hook-based migration jobs
-- Automatic image updates via ImagePolicy
-
-✅ **Application Flexibility**
-- Applications manage their own database connections
-- Applications handle queue/messaging integration
-- Custom environment variables via `env` list
-- Custom volumes and volume mounts support
+**Version:** 1.2.0
 
 ## Quick Start
 
-### Prerequisites
+```bash
+# 1. Create OAuth2 secret (if using OAuth2)
+kubectl create secret generic myservice-oauth2-cli \
+  --from-literal=client-secret='your-secret' -n core
 
-- Kubernetes cluster (1.25+)
-- Gateway API CRDs installed
-- FluxCD for GitOps automation (optional)
+# 2. Install (release name = service name)
+helm install myservice ./colony \
+  --set image.repository=ghcr.io/antinvestor/myservice \
+  --set image.tag=v1.0.0 \
+  --set gateway.hostname=myservice.antinvestor.com \
+  -n core
+```
 
-### Installation
+## Features
 
-1. **Create a values file** for your service (e.g., `values-myservice.yaml`):
+- ✅ **Kubernetes Orchestration** - Deployment, Service, HPA, PDB, ServiceAccount
+- ✅ **Gateway API** - HTTPRoute & GRPCRoute with CORS support
+- ✅ **Security** - Non-root containers, dropped capabilities, SecurityContext
+- ✅ **Observability** - OpenTelemetry with auto-injected Kubernetes metadata
+- ✅ **OAuth2** - Hydra integration with JWT audience verification
+- ✅ **GitOps** - FluxCD image automation
+- ✅ **Migrations** - Pre-install/upgrade Helm hooks
+- ✅ **Network Policies** - Optional traffic isolation
+- ✅ **Values Schema** - Validation for required fields
+
+## Prerequisites
+
+- Kubernetes 1.25+
+- Gateway API CRDs
+- Helm 3.4+ (for schema validation)
+
+## Installation
+
+### 1. Minimal Configuration
 
 ```yaml
-serviceName: myservice
-namespace: core
-
+# values.yaml
 image:
-  registry: ghcr.io
-  repository: antinvestor/myservice
+  repository: ghcr.io/antinvestor/myservice
   tag: v1.0.0
 
 gateway:
   enabled: true
-  type: http  # or grpc
-  hostname: myservice.chamamobile.com
+  hostname: myservice.antinvestor.com  # Required
 
 oauth2:
   enabled: true
-  clientSecret: your-client-secret
+  clientSecretRef:
+    name: ""  # Defaults to {release-name}-oauth2-cli
+    key: client-secret
+```
 
-# Add your database/queue connections
+```bash
+helm install myservice ./colony -f values.yaml -n core
+```
+
+### 2. Production Configuration
+
+```yaml
+# Production settings
+replicaCount: 3
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/myservice
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%
+
+networkPolicy:
+  enabled: true
+  ingressNamespace: envoy-gateway-system
+  datastoreNamespace: datastore
+  telemetryNamespace: telemetry
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 400Mi
+
+# Environment variables from ConfigMaps/Secrets
+envFrom:
+  - configMapRef:
+      name: app-config
+  - secretRef:
+      name: database-creds
+
+# Additional environment variables
 env:
   - name: DATABASE_URL
-    value: "postgres://user:pass@pooler-rw.datastore:5432/myservice"
+    value: "postgres://$(DB_USER):$(DB_PASS)@pooler-rw.datastore:5432/mydb"
   - name: LOG_LEVEL
     value: "info"
 ```
 
-2. **Install the chart**:
+See `examples/values-production.yaml` for a complete example.
 
-```bash
-helm install myservice ./charts/colony -f values-myservice.yaml
-```
+## Configuration Reference
 
-3. **Upgrade the chart**:
-
-```bash
-helm upgrade myservice ./charts/colony -f values-myservice.yaml
-```
-
-## Design Philosophy
-
-Colony follows a **separation of concerns** approach:
-
-### What Colony Manages ✅
-
-- **Kubernetes Resources**: Deployment, Service, HPA, PDB, Gateway Routes
-- **Core Configuration**: Logging, service ports, OAuth2, OpenTelemetry
-- **Kubernetes Metadata**: Automatic pod/node info injection for OTEL
-- **GitOps**: FluxCD image automation
-- **Migrations**: Pre-install/upgrade database migration jobs
-
-### What Applications Manage 🔧
-
-- **Database Connections**: Apps specify their own DATABASE_URL via `env`
-- **Queue/Messaging**: Apps configure NATS, Kafka, RabbitMQ as needed
-- **Caching**: Apps manage Redis, Memcached connections
-- **Custom Logic**: App-specific environment variables and configurations
-
-This approach provides **maximum flexibility** while maintaining **standardized deployment patterns**.
-
-### Security Context
-
-All containers run with:
-- `allowPrivilegeEscalation: false`
-- `runAsNonRoot: true`
-- Capabilities dropped: `ALL`
-- `seccompProfile: RuntimeDefault`
-
-Migration jobs additionally use:
-- `runAsUser: 1001`
-- `runAsGroup: 1001`
-- `readOnlyRootFilesystem: true`
-
-## Configuration
-
-### Required Values
+### Image (Required)
 
 ```yaml
-serviceName: ""      # e.g., profile, tenancy, ledger (used directly as resource name)
-namespace: core      # Kubernetes namespace
-
 image:
   registry: ghcr.io
-  repository: ""     # e.g., antinvestor/profile
-  tag: ""           # e.g., v1.22.0
+  repository: antinvestor/myservice  # Required
+  tag: v1.0.0  # Required
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - name: ghcr-auth
 ```
 
-**Important:** `serviceName` is used directly for all resources. If you set `serviceName: profile`, you get:
-- Deployment: `profile`
-- Service: `profile.core.svc.cluster.local`
-- OTEL service name: `profile`
-
-### Logging Configuration
+### ServiceAccount
 
 ```yaml
-logging:
-  enabled: true
-  level: info  # Options: debug, info, warn, error
+serviceAccount:
+  create: true  # Default: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/ROLE
+  name: ""  # Defaults to release name
 ```
 
-Sets the `LOG_LEVEL` environment variable.
-
-### Gateway Configuration
-
-**For HTTP services:**
+### Gateway API
 
 ```yaml
 gateway:
   enabled: true
-  type: http
-  hostname: myservice.chamamobile.com
-  cors:
+  type: http  # or grpc
+  hostname: myservice.antinvestor.com  # Required
+  parentRef:
+    kind: Gateway
+    name: default
+    namespace: envoy-gateway-system
+    sectionName: https
+  cors:  # HTTP only
     enabled: true
     allowOrigins:
       - "https://*"
-      - "http://localhost:5173"
     allowMethods:
       - GET
       - POST
@@ -206,38 +162,55 @@ gateway:
     allowCredentials: true
 ```
 
-**For gRPC services:**
-
-```yaml
-gateway:
-  enabled: true
-  type: grpc
-  hostname: myservice.chamamobile.com
-```
-
-### OAuth2 Configuration
+### OAuth2
 
 ```yaml
 oauth2:
   enabled: true
-  serviceUri: https://oauth2.chamamobile.com
+  serviceUri: https://oauth2.antinvestor.com
   adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
-  clientSecret: "your-client-secret"
-  audience: "service_partition,service_notifications"
-  jwtVerifyAudience: "service_myservice"  # Defaults to service_{serviceName}
+  clientSecretRef:
+    name: ""  # Defaults to {release-name}-oauth2-cli
+    key: client-secret
+  audience: "service_notifications,service_profile"
+  jwtVerifyAudience: "service_myservice"
 ```
 
-### OpenTelemetry Configuration
+**Secret Creation:**
+```bash
+kubectl create secret generic myservice-oauth2-cli \
+  --from-literal=client-secret='secret-here' -n core
+```
+
+### OpenTelemetry
 
 ```yaml
 opentelemetry:
   enabled: true
   environment: production
-  endpoint: http://opentelemetry-collector.telemetry.svc.cluster.local:4317
+  protocol: grpc
+  endpoint: http://opentelemetry-collector.telemetry:4317
+  insecure: true
+  compression: gzip
   exporters:
     traces: otlp
     metrics: otlp
     logs: otlp
+```
+
+Automatically injects Kubernetes metadata (pod name, namespace, IP, node) into OTEL resource attributes.
+
+### External DNS
+
+```yaml
+externalDNS:
+  enabled: true
+  # Uses gateway.hostname automatically
+  recordTTL: 180
+  recordType: CNAME
+  targets:
+    - "prod.antinvestor.com"
+  cloudflareProxied: true
 ```
 
 ### Migration Job
@@ -245,7 +218,8 @@ opentelemetry:
 ```yaml
 migration:
   enabled: true
-  command: ["migrate"]
+  args: ["migrate"]
+  env: []
   ttlSecondsAfterFinished: 300
   backoffLimit: 2
   activeDeadlineSeconds: 1800
@@ -258,394 +232,220 @@ migration:
       cpu: "500m"
 ```
 
-The migration job runs as a Helm pre-install/pre-upgrade hook.
+Runs as a pre-install/pre-upgrade Helm hook.
 
-### Custom Environment Variables
+### Environment Variables
 
-Add application-specific environment variables:
+**Bulk injection from ConfigMaps/Secrets:**
+```yaml
+envFrom:
+  - configMapRef:
+      name: app-config
+  - secretRef:
+      name: app-secrets
+```
 
+**Individual variables:**
 ```yaml
 env:
-  # Database connection
-  - name: DATABASE_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: hub-core-app
-        key: username
-  - name: DATABASE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: hub-core-app
-        key: password
   - name: DATABASE_URL
-    value: "postgres://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@pooler-rw.datastore.svc.cluster.local:5432/myservice"
-  
-  # Queue connection
-  - name: QUEUE_USERNAME
+    value: "postgres://user:pass@host:5432/db"
+  - name: SECRET_KEY
     valueFrom:
       secretKeyRef:
-        name: queue-myservice-secret
-        key: username
-  - name: QUEUE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: queue-myservice-secret
-        key: password
-  - name: EVENTS_QUEUE_URL
-    value: "nats://$(QUEUE_USERNAME):$(QUEUE_PASSWORD)@queue.datastore.svc.cluster.local:4222?..."
-  
-  # Application-specific
-  - name: FEATURE_FLAG_X
-    value: "true"
-  - name: API_TIMEOUT
-    value: "30s"
+        name: app-secret
+        key: secret-key
 ```
+
+## Automatically Set Environment Variables
+
+Colony automatically sets these environment variables:
+
+| Variable | Source | Description |
+|----------|--------|-------------|
+| `LOG_LEVEL` | `logging.level` | Log level (debug/info/warn/error) |
+| `HTTP_PORT` | `service.http.targetPort` | HTTP port |
+| `GRPC_PORT` | `service.grpc.targetPort` | gRPC port |
+| `OAUTH2_SERVICE_URI` | `oauth2.serviceUri` | OAuth2 service URL |
+| `OAUTH2_SERVICE_ADMIN_URI` | `oauth2.adminUri` | OAuth2 admin URL |
+| `OAUTH2_SERVICE_CLIENT_ID` | Release name | OAuth2 client ID |
+| `OAUTH2_SERVICE_CLIENT_SECRET` | Secret | OAuth2 client secret |
+| `OAUTH2_SERVICE_AUDIENCE` | `oauth2.audience` | OAuth2 audience |
+| `OAUTH2_JWT_VERIFY_AUDIENCE` | `oauth2.jwtVerifyAudience` | JWT verification audience |
+| `OTEL_SERVICE_NAME` | Release name | OpenTelemetry service name |
+| `OTEL_RESOURCE_ATTRIBUTES` | Auto-generated | OTEL attributes with K8s metadata |
+| `K8S_POD_NAME` | Downward API | Pod name |
+| `K8S_POD_NAMESPACE` | Downward API | Namespace |
+| `K8S_POD_IP` | Downward API | Pod IP |
+| `K8S_NODE_NAME` | Downward API | Node name |
+
+## Generated Resources
+
+| Resource | Condition | Description |
+|----------|-----------|-------------|
+| Deployment | Always | Main application deployment |
+| Service | Always | ClusterIP service |
+| ServiceAccount | `serviceAccount.create=true` | Pod identity |
+| HPA | `autoscaling.enabled=true` | Horizontal autoscaling |
+| PDB | `podDisruptionBudget.enabled=true` | Disruption budget |
+| HTTPRoute | `gateway.enabled=true` & `type=http` | Gateway API HTTP route |
+| GRPCRoute | `gateway.enabled=true` & `type=grpc` | Gateway API gRPC route |
+| DNSEndpoint | `externalDNS.enabled=true` | External DNS record |
+| NetworkPolicy | `networkPolicy.enabled=true` | Network isolation |
+| FluxCD ImageRepository | `fluxcd.enabled=true` | Image monitoring |
+| FluxCD ImagePolicy | `fluxcd.enabled=true` | Image update policy |
+| Migration Job | `migration.enabled=true` | Pre-install/upgrade hook |
+
+## Design Philosophy
+
+**What Colony Manages:**
+- Kubernetes resources (Deployment, Service, HPA, PDB, etc.)
+- Core configuration (logging, ports, OAuth2, OpenTelemetry)
+- Gateway routing and external access
+- GitOps automation
+
+**What Applications Manage:**
+- Database connections (via `env` or `envFrom`)
+- Queue/messaging configuration
+- Caching setup
+- Application-specific logic
+
+This separation provides maximum flexibility while maintaining standardized deployment patterns.
 
 ## Examples
 
-### Minimal HTTP Service
+### HTTP Service with Database
 
 ```yaml
-serviceName: api
-namespace: core
-
 image:
-  registry: ghcr.io
-  repository: antinvestor/api
+  repository: ghcr.io/antinvestor/api
   tag: v1.0.0
 
 gateway:
   enabled: true
   type: http
-  hostname: api.chamamobile.com
+  hostname: api.antinvestor.com
+  cors:
+    enabled: true
+    allowOrigins: ["https://*"]
 
 oauth2:
   enabled: true
-  clientSecret: "my-secret"
+
+envFrom:
+  - secretRef:
+      name: database-credentials
+
+env:
+  - name: DATABASE_URL
+    value: "postgres://$(DB_USER):$(DB_PASS)@pooler-rw.datastore:5432/api"
 ```
 
-```bash
-helm install api ./charts/colony -f values-api.yaml
-```
-
-### gRPC Service with Database
+### gRPC Service
 
 ```yaml
-serviceName: profile
-namespace: core
-
 image:
-  registry: ghcr.io
-  repository: antinvestor/profile
+  repository: ghcr.io/antinvestor/profile
   tag: v2.1.0
+
+service:
+  grpc:
+    enabled: true
+    port: 50051
+  http:
+    enabled: false
 
 gateway:
   enabled: true
   type: grpc
-  hostname: profile.chamamobile.com
+  hostname: profile.antinvestor.com
 
 oauth2:
   enabled: true
-  clientSecret: "profile-secret"
   audience: "service_notifications"
-
-env:
-  - name: DATABASE_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: hub-core-app
-        key: username
-  - name: DATABASE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: hub-core-app
-        key: password
-  - name: DATABASE_URL
-    value: "postgres://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@pooler-rw.datastore.svc.cluster.local:5432/profile"
 ```
-
-```bash
-helm install profile ./charts/colony -f values-profile.yaml
-```
-
-## Resource Templates
-
-The chart generates the following Kubernetes resources:
-
-| Template | Description | Condition |
-|----------|-------------|-----------|
-| `deployment.yaml` | Main application deployment | Always |
-| `service.yaml` | ClusterIP service | Always |
-| `hpa.yaml` | HorizontalPodAutoscaler | `autoscaling.enabled=true` |
-| `pdb.yaml` | PodDisruptionBudget | `podDisruptionBudget.enabled=true` |
-| `httproute.yaml` | Gateway API HTTPRoute | `gateway.enabled=true` & `gateway.type=http` |
-| `grpcroute.yaml` | Gateway API GRPCRoute | `gateway.enabled=true` & `gateway.type=grpc` |
-| `dnsendpoint.yaml` | External DNS endpoint | `externalDNS.enabled=true` |
-| `fluxcd-imagerepository.yaml` | FluxCD ImageRepository | `fluxcd.enabled=true` |
-| `fluxcd-imagepolicy.yaml` | FluxCD ImagePolicy | `fluxcd.enabled=true` |
-| `migration-job.yaml` | Pre-install/upgrade migration | `migration.enabled=true` |
-
-## Advanced Usage
-
-### Custom Volumes and Volume Mounts
-
-```yaml
-volumes:
-  - name: config
-    configMap:
-      name: my-config
-  - name: cache
-    emptyDir: {}
-
-volumeMounts:
-  - name: config
-    mountPath: /etc/config
-    readOnly: true
-  - name: cache
-    mountPath: /tmp/cache
-```
-
-### Disable Optional Features
-
-```yaml
-# Disable OAuth2
-oauth2:
-  enabled: false
-
-# Disable Gateway exposure
-gateway:
-  enabled: false
-
-# Disable migration job
-migration:
-  enabled: false
-
-# Disable auto-scaling
-autoscaling:
-  enabled: false
-
-# Disable external DNS
-externalDNS:
-  enabled: false
-```
-
-### Adjust Resource Limits
-
-```yaml
-resources:
-  limits:
-    cpu: 1000m
-    memory: 2Gi
-  requests:
-    cpu: 500m
-    memory: 1Gi
-```
-
-### Customize Autoscaling
-
-```yaml
-autoscaling:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 20
-  targetCPUUtilizationPercentage: 70
-  targetMemoryUtilizationPercentage: 75
-```
-
-### Health Probe Customization
-
-```yaml
-livenessProbe:
-  httpGet:
-    path: /healthz
-    port: http
-  initialDelaySeconds: 60
-  periodSeconds: 20
-  timeoutSeconds: 10
-  failureThreshold: 5
-
-readinessProbe:
-  httpGet:
-    path: /ready
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
-```
-
-## Environment Variables
-
-Colony automatically sets the following environment variables:
-
-### Logging
-- `LOG_LEVEL` - Configurable log level (debug, info, warn, error)
-
-### Service Ports
-- `HTTP_PORT` - HTTP service port (from `service.http.targetPort`)
-- `GRPC_PORT` - gRPC service port (from `service.grpc.targetPort`)
-
-### OAuth2
-- `OAUTH2_SERVICE_URI` - OAuth2 service URL
-- `OAUTH2_SERVICE_ADMIN_URI` - OAuth2 admin URL
-- `OAUTH2_SERVICE_CLIENT_SECRET` - OAuth2 client secret
-- `OAUTH2_SERVICE_AUDIENCE` - Services this service can access
-- `OAUTH2_JWT_VERIFY_AUDIENCE` - This service's JWT audience
-
-### OpenTelemetry
-- `OTEL_SERVICE_NAME` - Service identifier (defaults to `serviceName`)
-- `OTEL_RESOURCE_ATTRIBUTES` - Comma-separated resource attributes including Kubernetes metadata
-- `OTEL_EXPORTER_OTLP_PROTOCOL` - OTLP protocol (grpc/http)
-- `OTEL_TRACES_EXPORTER` - Traces exporter (otlp)
-- `OTEL_METRICS_EXPORTER` - Metrics exporter (otlp)
-- `OTEL_LOGS_EXPORTER` - Logs exporter (otlp)
-- `OTEL_EXPORTER_OTLP_ENDPOINT` - OTLP collector endpoint
-- `OTEL_EXPORTER_OTLP_INSECURE` - Use insecure connection
-- `OTEL_EXPORTER_OTLP_COMPRESSION` - Compression (gzip)
-- Additional OTEL metrics configuration
-
-### Kubernetes Metadata (via Downward API)
-- `K8S_POD_NAME` - Current pod name
-- `K8S_POD_NAMESPACE` - Current namespace
-- `K8S_POD_IP` - Current pod IP address
-- `K8S_NODE_NAME` - Node where pod is running
-
-These are automatically included in `OTEL_RESOURCE_ATTRIBUTES` for complete observability context.
-
-See [OpenTelemetry Kubernetes Metadata](docs/opentelemetry-kubernetes-metadata.md) for detailed documentation.
-
-## Best Practices
-
-### 1. Service Naming
-
-- Use simple, descriptive names: `profile`, `ledger`, `api`
-- Avoid prefixes like `service-` (the chart doesn't add them)
-- Use consistent naming across environments
-
-### 2. Resource Allocation
-
-- Profile your service before setting resource limits
-- Use HPA to handle traffic variability
-- Configure PDB for production workloads (minAvailable: 1)
-- Start conservative, scale up based on metrics
-
-### 3. Database Migrations
-
-- Test migrations thoroughly in staging
-- Use `activeDeadlineSeconds` to prevent stuck migrations
-- Keep migrations idempotent and reversible
-- Monitor migration job logs during deployments
-
-### 4. Observability
-
-- Always enable OpenTelemetry for production services
-- Kubernetes metadata is automatically injected
-- Add custom attributes via `env` for business context
-- Use consistent naming conventions for easier querying
-
-### 5. Security
-
-- Never commit secrets to git - use external secret managers
-- Rotate OAuth2 client secrets regularly
-- Use least-privilege RBAC policies
-- Enable Pod Security Standards
-
-### 6. Gateway & External Access
-
-- Use HTTPS with proper TLS certificates
-- Configure CORS appropriately for HTTP services
-- Test gateway routes after deployment
-- Use External DNS for automatic DNS management
 
 ## Troubleshooting
 
-### Pods Not Starting
-
+### Check Pod Status
 ```bash
-# Check pod status
 kubectl get pods -n core -l app.kubernetes.io/name=myservice
-
-# Check pod events
 kubectl describe pod -n core <pod-name>
-
-# Check logs
 kubectl logs -n core <pod-name>
 ```
 
-### Migration Job Fails
-
+### Check Gateway Routes
 ```bash
-# Check migration job logs
-kubectl logs -n core job/myservice-migration
-
-# Check job status
-kubectl get job -n core myservice-migration -o yaml
-
-# Delete failed job to retry
-kubectl delete job -n core myservice-migration
-helm upgrade myservice ./charts/colony -f values.yaml
-```
-
-### Service Not Accessible
-
-```bash
-# Check service endpoints
-kubectl get endpoints -n core myservice
-
-# Check HTTPRoute/GRPCRoute
 kubectl get httproute -n core myservice -o yaml
 kubectl get grpcroute -n core myservice -o yaml
+```
 
-# Check Gateway status
-kubectl get gateway -n envoy-gateway-system default -o yaml
+### Verify OAuth2 Secret
+```bash
+kubectl get secret myservice-oauth2-cli -n core
+```
 
-# Test internal service
+### Test Service Internally
+```bash
 kubectl run -it --rm test --image=curlimages/curl --restart=Never -- \
   curl http://myservice.core/healthz
 ```
 
-### OpenTelemetry Not Working
-
+### Check Migration Job
 ```bash
-# Check OTEL environment variables
-kubectl exec -n core deployment/myservice -- env | grep OTEL
-
-# Verify collector is reachable
-kubectl exec -n core deployment/myservice -- nc -zv opentelemetry-collector.telemetry 4317
-
-# Check application logs for OTEL errors
-kubectl logs -n core -l app.kubernetes.io/name=myservice | grep -i otel
+kubectl logs -n core job/myservice-migration
+kubectl get job -n core myservice-migration
 ```
 
-## Key Differences from Traditional Helm Charts
+## Key Concepts
 
-Colony takes a **minimalist approach**:
+### Release Name = Service Name
+The Helm release name is used as the service name throughout the chart. This is the Helm-native approach.
 
-### ❌ What Colony Doesn't Do
-- No automatic database URL generation
-- No automatic queue URL generation  
-- No CORS environment variable management
-- No CronJob resources (manage separately)
-- No secret generation (except for migrations)
+```bash
+# Release name "myservice" creates:
+# - Deployment: myservice
+# - Service: myservice.core.svc.cluster.local
+# - OAuth2 client ID: myservice
+# - OTEL service name: myservice
+helm install myservice ./colony -n core
+```
 
-### ✅ What Colony Does Well
-- Kubernetes orchestration (Deployment, Service, HPA, PDB)
-- Core observability (OAuth2, OpenTelemetry with K8s metadata)
-- Gateway API integration (HTTPRoute, GRPCRoute)
-- GitOps automation (FluxCD ImagePolicy)
-- Migration job management
+### Namespace via CLI
+Specify namespace using Helm's `-n` flag instead of in values:
 
-This separation allows:
-- **Applications** to own their integration patterns
-- **Colony** to focus on Kubernetes best practices
-- **Maximum flexibility** for different use cases
+```bash
+helm install myservice ./colony -n core
+helm install myservice ./colony -n staging
+```
 
-## Further Reading
+### Gateway Hostname
+The `gateway.hostname` is used for:
+- HTTPRoute/GRPCRoute hostname
+- External DNS record (if enabled)
 
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history and breaking changes
-- **[docs/opentelemetry-kubernetes-metadata.md](docs/opentelemetry-kubernetes-metadata.md)** - OTEL integration details
-- **[Gateway API Documentation](https://gateway-api.sigs.k8s.io/)** - HTTPRoute and GRPCRoute specs
-- **[FluxCD Image Automation](https://fluxcd.io/flux/guides/image-update/)** - Automated image updates
+### Values Schema
+The chart includes `values.schema.json` for validation. Helm 3.4+ will validate:
+- Required fields (`image.repository`, `image.tag`)
+- Data types and value ranges
+- Enum values
+
+## Best Practices
+
+1. **Always use HTTPS in production** - Configure TLS in your Gateway
+2. **Enable NetworkPolicy** - Restrict traffic to necessary services only
+3. **Use ServiceAccount with IAM** - For cloud provider integration (IRSA/Workload Identity)
+4. **Set resource limits** - Profile your service and set appropriate limits
+5. **Enable PodDisruptionBudget** - Ensure availability during node maintenance
+6. **Use envFrom for bulk config** - Simpler than individual env vars
+7. **Test migrations thoroughly** - Use `activeDeadlineSeconds` to prevent hangs
+8. **Monitor with OpenTelemetry** - Enable for all production services
+9. **Use FluxCD for GitOps** - Automate image updates
+10. **Keep secrets out of Git** - Use external secret managers or create manually
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and migration guides.
 
 ## License
 
@@ -654,6 +454,6 @@ Copyright © Antinvestor Team
 ## Support
 
 For issues or questions:
+- Check the examples in `examples/values-production.yaml`
+- Review the CHANGELOG for migration guides
 - Create an issue in the repository
-- Consult the [CHANGELOG.md](CHANGELOG.md) for migration guides
-- Review example values files for common patterns

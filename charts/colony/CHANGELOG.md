@@ -1,5 +1,90 @@
 # Colony Helm Chart Changelog
 
+## Version 1.2.0 - Simplification & Production Enhancements (2025-11-11)
+
+### 🎯 Breaking Changes
+
+**Removed serviceName Field**
+- Removed `serviceName` from values.yaml
+- Now uses `.Release.Name` consistently throughout all templates
+- This is the Helm-native approach and reduces confusion
+- Migration: Use `helm install <your-service-name>` instead of setting serviceName
+
+**Removed OAuth2 Auto-Generation References**
+- Removed all references to `oauth2.autoGenerateSecret` and `oauth2.secretGenerator`
+- These features were documented but not implemented
+- Users must create OAuth2 secrets manually or use external-secrets operator
+- Updated documentation with clear secret creation instructions
+
+### ✨ New Features
+
+**ServiceAccount Support**
+- Added ServiceAccount template (`templates/serviceaccount.yaml`)
+- Configurable via `serviceAccount.create`, `serviceAccount.annotations`, `serviceAccount.name`
+- Supports IRSA/Workload Identity annotations for cloud provider IAM integration
+- Defaults to creating a ServiceAccount with the release name
+
+**Environment Variables from ConfigMaps/Secrets (envFrom)**
+- Added `envFrom` support for bulk environment variable injection
+- Simplifies configuration management
+- Example:
+  ```yaml
+  envFrom:
+    - configMapRef:
+        name: app-config
+    - secretRef:
+        name: app-secrets
+  ```
+
+**Values Schema Validation**
+- Added `values.schema.json` for Helm 3.4+ schema validation
+- Validates required fields (image.repository, image.tag)
+- Ensures correct data types and value ranges
+- Improves error messages during deployment
+
+### 🐛 Bug Fixes
+
+**Fixed Migration Job Configuration**
+- Fixed example in `values-production.yaml` to use `args:` instead of `command:`
+- Aligns with actual template implementation
+
+**Updated Helper Functions**
+- Added missing `colony.gatewayHostname` helper
+- Added `colony.externalDNSName` helper
+- Added `colony.serviceAccountName` helper
+- Default hostname now uses `.Release.Name` and `antinvestor.com` domain
+
+### 📚 Documentation Updates
+
+- Removed all references to `autoGenerateSecret` feature
+- Updated OAuth2 documentation with manual secret creation instructions
+- Updated comments to reflect `.Release.Name` usage instead of `serviceName`
+- Added clear examples for new features (ServiceAccount, envFrom)
+
+### 🔄 Migration Guide
+
+**From v1.1.x to v1.2.0:**
+
+1. **Remove serviceName field:**
+   ```yaml
+   # OLD (v1.1.x)
+   serviceName: myservice
+   
+   # NEW (v1.2.0)
+   # Just use: helm install myservice ./colony
+   ```
+
+2. **Create OAuth2 secret manually:**
+   ```bash
+   kubectl create secret generic myservice-oauth2-cli \
+     --from-literal=client-secret='your-secret-here' \
+     -n <namespace>
+   ```
+
+3. **Update values files:**
+   - Remove `oauth2.autoGenerateSecret` field
+   - Remove `oauth2.secretGenerator` field
+
 ## Version 1.1.0 - Production Hardening (2025-11-05)
 
 ### 🔒 Security Enhancements

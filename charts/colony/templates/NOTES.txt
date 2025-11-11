@@ -20,7 +20,7 @@ Resources Deployed:
   ✓ {{ if eq .Values.gateway.type "http" }}HTTPRoute{{ else }}GRPCRoute{{ end }} ({{ .Values.gateway.hostname }})
 {{- end }}
 {{- if .Values.externalDNS.enabled }}
-  ✓ DNSEndpoint ({{ include "colony.externalDNSName" . }})
+  ✓ DNSEndpoint ({{ .Values.gateway.hostname }})
 {{- end }}
 {{- if .Values.fluxcd.enabled }}
   ✓ FluxCD ImageRepository and ImagePolicy
