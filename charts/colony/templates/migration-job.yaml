@@ -19,14 +19,10 @@ metadata:
     helm.toolkit.fluxcd.io/hook: pre-install,pre-upgrade
     helm.toolkit.fluxcd.io/hook-delete-policy: before-hook-creation,hook-succeeded
     helm.toolkit.fluxcd.io/hook-weight: "1"
-
-    # Helps debugging — Job name visible in UI
-    reloader.stakater.com/auto: "false"
-
 spec:
-  ttlSecondsAfterFinished: {{ default 300 .Values.migration.ttlSecondsAfterFinished }}
-  backoffLimit: {{ default 30 .Values.migration.backoffLimit }}
-  activeDeadlineSeconds: {{ default 1800 .Values.migration.activeDeadlineSeconds }}
+  ttlSecondsAfterFinished: {{ .Values.migration.ttlSecondsAfterFinished }}
+  backoffLimit: {{ .Values.migration.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
   parallelism: 1
   completions: 1
   template:
@@ -47,30 +43,26 @@ spec:
       {{- end }}
 
       containers:
-        - name: migration
-          image: "{{ .Values.image.repository }}{{ if .Values.image.digest }}@{{ .Values.image.digest }}{{ else }}:{{ .Values.image.tag }}{{ end }}"
-          imagePullPolicy: {{ default "IfNotPresent" .Values.image.pullPolicy }}
-
+        - name: "{{ .Release.Name }}-{{ include "colony.imageHash" . }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          # imageDigest: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.migration.securityContext | nindent 12 }}
-
           resources:
             {{- toYaml .Values.migration.resources | nindent 12 }}
-
+          {{- if .Values.migration.args }}
           args:
-            {{- if .Values.migration.args }}
             {{- toYaml .Values.migration.args | nindent 12 }}
-            {{- else }}
-            - "migrate"
-            {{- end }}
-
-          env:
-            - name: RUN_MIGRATIONS
-              value: "true"
-            # Additional custom envs
-          {{- with .Values.migration.env }}
-            {{- toYaml . | nindent 12 }}
           {{- end }}
+          env:
+            - name: DO_MIGRATION
+              value: "true"
+
+            # Additional environment variables for migration
+            {{- with .Values.migration.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
           {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
           volumeMounts:
@@ -81,7 +73,6 @@ spec:
       {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
       volumes:
         - name: tmp
-          emptyDir:
-            medium: Memory
+          emptyDir: {}
       {{- end }}
 {{- end }}
