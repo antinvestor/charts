@@ -265,7 +265,7 @@ migration:
   args: ["migrate"]
   env: []
   ttlSecondsAfterFinished: 300
-  backoffLimit: 2
+  backoffLimit: 15
   activeDeadlineSeconds: 1800
   resources:
     requests:

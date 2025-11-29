@@ -2,63 +2,85 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-migration
+  name: {{ .Release.Name }}-migration-{{ .Values.image.tag }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ .Release.Name }}
-    component: migration
     {{- include "colony.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
   annotations:
+    # Ensures migrations run BEFORE new workloads roll out
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+
+    # FluxCD hook support (Flux reads Helm annotations)
     helm.toolkit.fluxcd.io/hook: pre-install,pre-upgrade
-    helm.toolkit.fluxcd.io/hook-delete-policy: before-hook-creation
+    helm.toolkit.fluxcd.io/hook-delete-policy: before-hook-creation,hook-succeeded
     helm.toolkit.fluxcd.io/hook-weight: "1"
+
+    # Helps debugging — Job name visible in UI
+    reloader.stakater.com/auto: "false"
+
 spec:
-  ttlSecondsAfterFinished: {{ .Values.migration.ttlSecondsAfterFinished }}
-  backoffLimit: {{ .Values.migration.backoffLimit }}
-  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
+  ttlSecondsAfterFinished: {{ default 300 .Values.migration.ttlSecondsAfterFinished }}
+  backoffLimit: {{ default 2 .Values.migration.backoffLimit }}
+  activeDeadlineSeconds: {{ default 600 .Values.migration.activeDeadlineSeconds }}
   parallelism: 1
   completions: 1
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
-        component: migration
+        app.kubernetes.io/name: {{ .Release.Name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: migration
     spec:
+      restartPolicy: Never
+
+      # Strong production recommendation: use a dedicated SA
+      serviceAccountName: {{ include "colony.serviceAccountName" . }}
+
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      restartPolicy: Never
+
       containers:
-        - name: "{{ .Release.Name }}-migration"
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - name: migration
+          image: "{{ .Values.image.repository }}{{ if .Values.image.digest }}@{{ .Values.image.digest }}{{ else }}:{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: {{ default "IfNotPresent" .Values.image.pullPolicy }}
+
           securityContext:
             {{- toYaml .Values.migration.securityContext | nindent 12 }}
+
           resources:
             {{- toYaml .Values.migration.resources | nindent 12 }}
-          {{- if .Values.migration.args }}
+
           args:
+            {{- if .Values.migration.args }}
             {{- toYaml .Values.migration.args | nindent 12 }}
-          {{- end }}
+            {{- else }}
+            - "migrate"
+            {{- end }}
+
           env:
-            - name: DO_MIGRATION
+            - name: RUN_MIGRATIONS
               value: "true"
-            
-            # Additional environment variables for migration
+
+            # Additional custom envs
             {{- with .Values.migration.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          
+
           {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
           volumeMounts:
             - name: tmp
               mountPath: /tmp
           {{- end }}
-      
+
       {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
       volumes:
         - name: tmp
-          emptyDir: {}
+          emptyDir:
+            medium: Memory
       {{- end }}
 {{- end }}
