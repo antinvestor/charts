@@ -3,6 +3,23 @@ entries:
   colony:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2025-11-29T20:12:12.69544719Z"
+    description: A production-hardened Helm chart for deploying Ant Investor microservices
+    digest: 19212754ff6ee0f54d95d3188a435ee15ad04465f9e2d6936761e9f553a44937
+    icon: https://raw.githubusercontent.com/antinvestor/charts/main/charts/colony/colony.png
+    keywords:
+    - colony
+    - microservice
+    - kubernetes
+    maintainers:
+    - name: Antinvestor Team
+    name: colony
+    type: application
+    urls:
+    - https://github.com/antinvestor/charts/releases/download/colony-1.4.5/colony-1.4.5.tgz
+    version: 1.4.5
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2025-11-29T19:12:54.211987193Z"
     description: A production-hardened Helm chart for deploying Ant Investor microservices
     digest: e5aaf4db70aee40f89b0a3e28e65d95ab2c1d6f18b7aba787504f320b6da767e
@@ -132,4 +149,4 @@ entries:
     urls:
     - https://github.com/antinvestor/charts/releases/download/colony-1.1.0/colony-1.1.0.tgz
     version: 1.1.0
-generated: "2025-11-29T19:12:54.21202296Z"
+generated: "2025-11-29T20:12:12.695485692Z"
