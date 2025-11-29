@@ -9,6 +9,6 @@ metadata:
 spec:
   secretRef:
     name: {{ .Values.fluxcd.imageRepository.secretRef }}
-  image: {{ .Values.image.registry }}/{{ .Values.image.repository }}
+  image: {{ .Values.image.repository }}
   interval: {{ .Values.fluxcd.imageRepository.interval }}
 {{- end }}

@@ -120,8 +120,7 @@ See `examples/values-production.yaml` for a complete example.
 
 ```yaml
 image:
-  registry: ghcr.io
-  repository: antinvestor/myservice  # Required
+  repository: ghcr.io/antinvestor/myservice  # Required
   tag: v1.0.0  # Required
   pullPolicy: IfNotPresent
   pullSecrets:

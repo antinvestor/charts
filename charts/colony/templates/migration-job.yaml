@@ -31,7 +31,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: "{{ .Release.Name }}-migration"
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.migration.securityContext | nindent 12 }}

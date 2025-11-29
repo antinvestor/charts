@@ -13,10 +13,6 @@
       "type": "object",
       "required": ["repository", "tag"],
       "properties": {
-        "registry": {
-          "type": "string",
-          "description": "Container registry"
-        },
         "repository": {
           "type": "string",
           "description": "Image repository",

@@ -6,8 +6,7 @@
 
 # Image configuration
 image:
-  registry: ghcr.io
-  repository: antinvestor/myservice
+  repository: ghcr.io/antinvestor/myservice
   tag: v1.0.0
   pullPolicy: IfNotPresent
   pullSecrets:

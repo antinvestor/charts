@@ -8,9 +8,9 @@
 
 # Image configuration
 image:
-  registry: ghcr.io
-  repository: "antinvestor/example-service"  # Required: Set to your service repository
+  repository: "ghcr.io/antinvestor/example-service"  # Required: Set to your service repository
   tag: "v1.0.0"  # Required: Set to your service version
+  digest: "sha256:ec0119616bb8be9199575c05bfc23a6bf0fbdb0690ee15834e7b43bc3f4f6017"
   pullPolicy: IfNotPresent
   pullSecrets:
     - name: ghcr-auth
@@ -254,7 +254,7 @@ fluxcd:
   enabled: true
   imageRepository:
     secretRef: ghcr-auth
-    interval: 5m0s
+    interval: 10m0s
   imagePolicy:
     semver:
       range: ">=v0.0.1"
