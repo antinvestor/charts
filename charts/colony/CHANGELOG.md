@@ -1,6 +1,12 @@
 # Colony Helm Chart Changelog
 
 
+## Version 1.4.1- Simplification & Production Enhancements (2025-11-29)
+
+**Enhance image policy to add digestReflectionPolicy: IfNotPresent**
+- Add `digestReflectionPolicy: IfNotPresent` for image policies
+
+
 ## Version 1.4.0 - Simplification & Production Enhancements (2025-11-29)
 
 ### 🎯 Breaking Changes

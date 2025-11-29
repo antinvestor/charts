@@ -9,6 +9,7 @@ metadata:
 spec:
   imageRepositoryRef:
     name: {{ .Release.Name }}
+  digestReflectionPolicy: IfNotPresent
   policy:
     semver:
       range: {{ .Values.fluxcd.imagePolicy.semver.range | quote }}
