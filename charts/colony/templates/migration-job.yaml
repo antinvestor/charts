@@ -2,10 +2,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-migration-{{ include "colony.imageHash" . }}
+  name: {{ .Release.Name }}-{{ include "colony.imageHash" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Release.Name }}-migration-{{ include "colony.imageHash" . }}
+    app.kubernetes.io/name: {{ .Release.Name }}-{{ include "colony.imageHash" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: migration
     {{- include "colony.labels" . | nindent 4 }}
@@ -25,14 +25,14 @@ metadata:
 
 spec:
   ttlSecondsAfterFinished: {{ default 300 .Values.migration.ttlSecondsAfterFinished }}
-  backoffLimit: {{ default 2 .Values.migration.backoffLimit }}
-  activeDeadlineSeconds: {{ default 600 .Values.migration.activeDeadlineSeconds }}
+  backoffLimit: {{ default 30 .Values.migration.backoffLimit }}
+  activeDeadlineSeconds: {{ default 1800 .Values.migration.activeDeadlineSeconds }}
   parallelism: 1
   completions: 1
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ .Release.Name }}-migration-{{ include "colony.imageHash" . }}
+        app.kubernetes.io/name: {{ .Release.Name }}-{{ include "colony.imageHash" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: migration
     spec:
@@ -67,11 +67,10 @@ spec:
           env:
             - name: RUN_MIGRATIONS
               value: "true"
-
             # Additional custom envs
-            {{- with .Values.migration.env }}
+          {{- with .Values.migration.env }}
             {{- toYaml . | nindent 12 }}
-            {{- end }}
+          {{- end }}
 
           {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
           volumeMounts:

@@ -2,7 +2,8 @@ apiVersion: v2
 name: colony
 description: A production-hardened Helm chart for deploying Ant Investor microservices
 type: application
-version: 1.4.3
+icon: https://raw.githubusercontent.com/antinvestor/charts/main/charts/colony/colony.png
+version: 1.4.4
 appVersion: "0.0.1"
 keywords:
   - colony

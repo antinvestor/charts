@@ -22,6 +22,8 @@ serviceAccount:
   # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/IAM_ROLE_NAME
   name: ""  # Defaults to release name
   imagePullSecrets: []  # Override image pull secrets for ServiceAccount
+  automountServiceAccountToken: true
+
 
 # Deployment configuration
 replicaCount: 2
@@ -132,6 +134,27 @@ podAntiAffinity:
 
 # Custom affinity rules (overrides podAntiAffinity if set)
 affinity: {}
+
+# Topology Spread Constraints
+topologySpreadConstraints: []
+# Example:
+# - maxSkew: 1
+#   topologyKey: topology.kubernetes.io/zone
+#   whenUnsatisfiable: DoNotSchedule
+#   labelSelector:
+#     matchLabels:
+#       app.kubernetes.io/name: colony
+
+# Priority Class Name
+priorityClassName: ""
+
+# DNS Configuration
+dnsConfig: {}
+# Example:
+#   options:
+#     - name: ndots
+#       value: "2"
+
 
 # Logging configuration
 logging:
