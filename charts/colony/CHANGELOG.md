@@ -1,5 +1,13 @@
 # Colony Helm Chart Changelog
 
+
+## Version 1.4.0 - Simplification & Production Enhancements (2025-11-29)
+
+### 🎯 Breaking Changes
+
+**Removed image registry Field**
+- Removed `image.registry` from values.yaml in preference of direct image.repository use
+
 ## Version 1.2.0 - Simplification & Production Enhancements (2025-11-11)
 
 ### 🎯 Breaking Changes
