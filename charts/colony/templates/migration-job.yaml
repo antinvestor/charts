@@ -10,12 +10,6 @@ metadata:
     app.kubernetes.io/component: migration
     {{- include "colony.labels" . | nindent 4 }}
   annotations:
-    # Ensures migrations run BEFORE new workloads roll out
-    helm.sh/hook: pre-install,pre-upgrade
-    helm.sh/hook-weight: "1"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
-
-    # FluxCD hook support (Flux reads Helm annotations)
     helm.toolkit.fluxcd.io/hook: pre-install,pre-upgrade
     helm.toolkit.fluxcd.io/hook-delete-policy: before-hook-creation,hook-succeeded
     helm.toolkit.fluxcd.io/hook-weight: "1"
@@ -32,16 +26,11 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: migration
     spec:
-      restartPolicy: Never
-
-      # Strong production recommendation: use a dedicated SA
-      serviceAccountName: {{ include "colony.serviceAccountName" . }}
-
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
+      restartPolicy: Never
       containers:
         - name: "{{ .Release.Name }}-{{ include "colony.imageHash" . }}"
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
