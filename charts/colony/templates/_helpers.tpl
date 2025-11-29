@@ -41,3 +41,10 @@ ServiceAccount name
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Image tag hash
+*/}}
+{{- define "colony.imageHash" -}}
+{{- (sha256sum .Values.image.tag) | trunc 8 -}}
+{{- end -}}
