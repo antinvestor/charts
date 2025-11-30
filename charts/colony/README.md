@@ -2,11 +2,17 @@
 
 Production-ready Helm chart for deploying microservices on Kubernetes with standardized patterns for OAuth2, OpenTelemetry, and Gateway API.
 
-**Version:** 1.2.0
+**Version:** 1.4.7
 
 ## Quick Start
 
 ```bash
+
+# 0. Test using command and progress once satisfied by the result
+ helm install testsvc charts/colony/ -f charts/colony/examples/values-production.yaml --dry-run --debug
+
+
+
 # 1. Create OAuth2 secret (if using OAuth2)
 kubectl create secret generic myservice-oauth2-cli \
   --from-literal=client-secret='your-secret' -n core

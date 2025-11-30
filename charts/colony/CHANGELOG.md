@@ -1,6 +1,12 @@
 # Colony Helm Chart Changelog
 
 
+## Version 1.4.7- Resolve bugs in migrations (2025-11-30)
+
+**Resolve bugs in migration**
+- Resolve bugs in the setup of migration jobs
+
+
 ## Version 1.4.1- Simplification & Production Enhancements (2025-11-29)
 
 **Enhance image policy to add digestReflectionPolicy: IfNotPresent**

@@ -4,6 +4,8 @@ metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
     {{- include "colony.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
   annotations:

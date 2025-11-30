@@ -12,8 +12,8 @@ image:
   pullSecrets:
     - name: ghcr-auth
 
-# High availability - 3 replicas for better resilience
-replicaCount: 3
+# High availability - 1 replica for easier debugging
+replicaCount: 1
 
 # Rolling update strategy
 strategy:
@@ -125,7 +125,7 @@ podAntiAffinity:
 # Logging
 logging:
   enabled: true
-  level: info
+  level: debug
 
 # OAuth2 configuration
 # Create the secret before deployment:
@@ -147,7 +147,7 @@ oauth2:
 # OpenTelemetry configuration
 opentelemetry:
   enabled: true
-  environment: production
+  environment: development
   protocol: grpc
   endpoint: http://opentelemetry-collector.telemetry.svc.cluster.local:4317
   insecure: true
@@ -229,8 +229,22 @@ migration:
   enabled: true
   args: ["migrate"]  # Container arguments
   ttlSecondsAfterFinished: 300
-  backoffLimit: 2
-  activeDeadlineSeconds: 1800
+  backoffLimit: 15
+  activeDeadlineSeconds: 3600
+  env:
+    # Database connections
+    - name: DATABASE_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: hub-core-app
+          key: username
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: hub-core-app
+          key: password
+    - name: DATABASE_URL
+      value: "postgres://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@pooler-rw.datastore.svc.cluster.local:5432/myservice"
   resources:
     requests:
       memory: "128Mi"

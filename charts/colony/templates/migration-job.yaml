@@ -2,10 +2,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-{{ include "colony.imageHash" . }}
+  name: {{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Release.Name }}-{{ include "colony.imageHash" . }}
+    app.kubernetes.io/name: {{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: migration
     {{- include "colony.labels" . | nindent 4 }}
@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ .Release.Name }}-{{ include "colony.imageHash" . }}
+        app.kubernetes.io/name: {{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: migration
     spec:
@@ -32,7 +32,7 @@ spec:
       {{- end }}
       restartPolicy: Never
       containers:
-        - name: "{{ .Release.Name }}-{{ include "colony.imageHash" . }}"
+        - name: "{{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}"
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           # imageDigest: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
