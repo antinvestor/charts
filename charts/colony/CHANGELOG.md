@@ -1,6 +1,16 @@
 # Colony Helm Chart Changelog
 
 
+## Version 1.4.8- Cleanup environment variable ordering (2025-12-07)
+
+**Resolve bugs in migration**
+**Fixed the environment variable ordering issue**
+
+- Removed GRPC_PORT conditional to eliminate duplicate variables
+- Reordered Kubernetes metadata variables to appear before OpenTelemetry configuration
+- Consolidated the structure to match Kubernetes' expected patch order
+The error was caused by environment variables being in a different order during Helm upgrades compared to the initial deployment. Kubernetes requires the exact same order for patch operations to succeed.
+
 ## Version 1.4.7- Resolve bugs in migrations (2025-11-30)
 
 **Resolve bugs in migration**

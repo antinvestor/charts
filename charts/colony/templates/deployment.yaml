@@ -127,10 +127,6 @@ spec:
             - name: HTTP_PORT
               value: {{ .Values.service.http.targetPort | quote }}
             {{- end }}
-            {{- if .Values.service.grpc.enabled }}
-            - name: GRPC_PORT
-              value: {{ .Values.service.grpc.targetPort | quote }}
-            {{- end }}
             
             # OAuth2 configuration
             {{- if .Values.oauth2.enabled }}
@@ -158,8 +154,6 @@ spec:
               value: {{ .Values.oauth2.jwtVerifyAudience }}
             {{- end }}
             
-            # OpenTelemetry configuration
-            {{- if .Values.opentelemetry.enabled }}
             # Kubernetes metadata via Downward API
             - name: K8S_POD_NAME
               valueFrom:
@@ -177,6 +171,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            
+            # OpenTelemetry configuration
+            {{- if .Values.opentelemetry.enabled }}
             - name: OTEL_SERVICE_NAME
               value: {{ .Release.Name | quote }}
             - name: OTEL_RESOURCE_ATTRIBUTES
