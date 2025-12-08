@@ -1,5 +1,8 @@
 # Colony Helm Chart Changelog
 
+## Version 1.4.9- Remove unnecessary logging section (2025-12-8)
+**Cleanup logging section**
+- Remove unwanted logging section from chart
 
 ## Version 1.4.8- Cleanup environment variable ordering (2025-12-07)
 

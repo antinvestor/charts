@@ -156,11 +156,6 @@ dnsConfig: {}
 #       value: "2"
 
 
-# Logging configuration
-logging:
-  enabled: true
-  level: info  # Options: debug, info, warn, error
-
 # OAuth2 configuration
 oauth2:
   enabled: true
