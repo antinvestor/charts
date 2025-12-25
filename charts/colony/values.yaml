@@ -74,14 +74,20 @@ resources:
 # Service ports
 service:
   type: ClusterIP
+  # Zone-aware routing (Option 1 from Envoy Gateway docs)
+  # Use ONE of these options, not both:
+  topologyMode: "Auto"  # uses annotation service.kubernetes.io/topology-mode
+  trafficDistribution: "PreferClose"  # e.g., "PreferClose" - uses spec.trafficDistribution
   grpc:
     enabled: false
     port: 50051
     targetPort: 50051
+    appProtocol: ""  # e.g., kubernetes.io/h2c, grpc
   http:
     enabled: true
     port: 80
     targetPort: 80
+    appProtocol: ""  # e.g., http, https, kubernetes.io/h2c
 
 # Health probes
 livenessProbe:

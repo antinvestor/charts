@@ -5,6 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{ include "colony.labels" . | nindent 4 }}
+  annotations:
+    service.kubernetes.io/topology-mode: {{ .Values.service.topologyMode }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -13,12 +15,21 @@ spec:
       port: {{ .Values.service.grpc.port }}
       targetPort: {{ .Values.service.grpc.targetPort }}
       protocol: TCP
+      {{- if .Values.service.grpc.appProtocol }}
+      appProtocol: {{ .Values.service.grpc.appProtocol }}
+      {{- end }}
     {{- end }}
     {{- if .Values.service.http.enabled }}
     - name: http
       port: {{ .Values.service.http.port }}
       targetPort: {{ .Values.service.http.targetPort }}
       protocol: TCP
+      {{- if .Values.service.http.appProtocol }}
+      appProtocol: {{ .Values.service.http.appProtocol }}
+      {{- end }}
     {{- end }}
+  {{- if .Values.service.trafficDistribution }}
+  trafficDistribution: {{ .Values.service.trafficDistribution }}
+  {{- end }}
   selector:
     {{ include "colony.selectorLabels" . | nindent 4 }}
