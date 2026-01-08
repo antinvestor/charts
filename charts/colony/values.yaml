@@ -78,6 +78,21 @@ service:
   # Use ONE of these options, not both:
   topologyMode: "Auto"  # uses annotation service.kubernetes.io/topology-mode
   trafficDistribution: "PreferClose"  # e.g., "PreferClose" - uses spec.trafficDistribution
+
+  # Dual-stack (IPv4/IPv6) configuration
+  # ipFamilyPolicy options:
+  #   - SingleStack: Single IP family only (default)
+  #   - PreferDualStack: Dual-stack if available, single otherwise
+  #   - RequireDualStack: Require dual-stack, fail if not available
+  ipFamilyPolicy: "SingleStack"
+  # ipFamilies specifies the order of IP families for dual-stack
+  # Examples:
+  #   - ["IPv4"]           # IPv4 only (default)
+  #   - ["IPv6"]           # IPv6 only
+  #   - ["IPv4", "IPv6"]   # Dual-stack, prefer IPv4
+  #   - ["IPv6", "IPv4"]   # Dual-stack, prefer IPv6
+  ipFamilies: []  # Empty uses cluster default
+
   grpc:
     enabled: false
     port: 50051
@@ -209,6 +224,9 @@ gateway:
     sectionName: https
   # Hostname for external access (also used for externalDNS if enabled)
   hostname: ""  # Required if gateway enabled: e.g., myservice.antinvestor.com
+  timeouts:
+    request: 15s
+    idle: 30s
   # CORS settings for HTTPRoute
   cors:
     enabled: false

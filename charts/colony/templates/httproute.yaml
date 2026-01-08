@@ -37,4 +37,7 @@ spec:
         - name: {{ .Release.Name }}
           port: {{ .Values.service.http.port }}
           weight: 1
+      timeouts:
+        request: {{ .Values.gateway.timeouts.request }}
+        idle: {{ .Values.gateway.timeouts.idle }}
 {{- end }}

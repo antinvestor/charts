@@ -65,6 +65,14 @@ resources:
 # Service configuration
 service:
   type: ClusterIP
+  # Dual-stack configuration (IPv4/IPv6)
+  # Options: SingleStack (default), PreferDualStack, RequireDualStack
+  ipFamilyPolicy: "SingleStack"
+  # Uncomment for dual-stack support:
+  # ipFamilyPolicy: "PreferDualStack"
+  # ipFamilies:
+  #   - IPv4
+  #   - IPv6
   grpc:
     enabled: true
     port: 50051
