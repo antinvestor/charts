@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["mode", "image", "network", "auth"],
+  "properties": {
+    "mode": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["DaemonSet", "Deployment"]
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag"],
+      "properties": {
+        "repository": { "type": "string" },
+        "tag": { "type": "string" }
+      }
+    },
+    "network": {
+      "type": "object",
+      "required": ["hostNetwork", "controlPort", "relay"],
+      "properties": {
+        "hostNetwork": { "type": "boolean" },
+        "controlPort": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "relay": {
+          "type": "object",
+          "required": ["minPort", "maxPort"],
+          "properties": {
+            "minPort": { "type": "integer" },
+            "maxPort": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": ["realm", "secretName", "secretKey"],
+      "properties": {
+        "realm": { "type": "string" },
+        "secretName": { "type": "string" },
+        "secretKey": { "type": "string" }
+      }
+    },
+    "controlPlane": {
+      "type": "object",
+      "properties": {
+        "gatewayAPI": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

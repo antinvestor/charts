@@ -1,0 +1,13 @@
+apiVersion: v2
+name: coturn
+description: Scalable coturn TURN server (HMAC-only, production-grade)
+type: application
+icon: https://www.gstatic.com/devrel-devsite/prod/v5ecaab6967af5bdfffc1b93fe7d0ad58c271bf9f563243cec25f323a110134f0/webrtc/images/lockup.svg
+version: 0.1.0
+appVersion: "4.6.2"
+keywords:
+  - coturn
+  - microservice
+  - kubernetes
+maintainers:
+  - name: Antinvestor Team

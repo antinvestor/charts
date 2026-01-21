@@ -1,0 +1,42 @@
+mode:
+  kind: DaemonSet # DaemonSet or Deployment
+
+image:
+  repository: coturn/coturn
+  tag: "4.6.2"
+  pullPolicy: IfNotPresent
+
+network:
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+
+  controlPort: 3478
+
+  relay:
+    minPort: 30000
+    maxPort: 65535
+
+resources:
+  requests:
+    cpu: "4"
+    memory: "4Gi"
+  limits:
+    cpu: "4"
+    memory: "4Gi"
+
+affinity:
+  onePodPerNode: true
+
+auth:
+  realm: turn.example.com
+  secretName: coturn-hmac
+  secretKey: auth-secret
+
+observability:
+  metrics: true
+
+controlPlane:
+  gatewayAPI:
+    enabled: false
+    gatewayName: turn-gateway
+    listenerName: turn-tcp

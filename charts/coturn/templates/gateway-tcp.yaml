@@ -1,0 +1,14 @@
+{{- if .Values.controlPlane.gatewayAPI.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: TCPRoute
+metadata:
+  name: coturn-tcp
+spec:
+  parentRefs:
+    - name: {{ .Values.controlPlane.gatewayAPI.gatewayName }}
+      sectionName: {{ .Values.controlPlane.gatewayAPI.listenerName }}
+  rules:
+    - backendRefs:
+        - name: {{ include "coturn.fullname" . }}-tcp
+          port: {{ .Values.network.controlPort }}
+{{- end }}
