@@ -251,4 +251,22 @@ entries:
     urls:
     - https://github.com/antinvestor/charts/releases/download/colony-1.1.0/colony-1.1.0.tgz
     version: 1.1.0
-generated: "2026-01-08T23:21:12.21570276Z"
+  coturn:
+  - apiVersion: v2
+    appVersion: 4.6.2
+    created: "2026-01-21T07:26:48.0226095Z"
+    description: Scalable coturn TURN server (HMAC-only, production-grade)
+    digest: 6dc6d1e8cb9b4780bf93c4db896c30beb9244af765f7b0e61b09580fa844f3d3
+    icon: https://www.gstatic.com/devrel-devsite/prod/v5ecaab6967af5bdfffc1b93fe7d0ad58c271bf9f563243cec25f323a110134f0/webrtc/images/lockup.svg
+    keywords:
+    - coturn
+    - microservice
+    - kubernetes
+    maintainers:
+    - name: Antinvestor Team
+    name: coturn
+    type: application
+    urls:
+    - https://github.com/antinvestor/charts/releases/download/coturn-0.1.0/coturn-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-01-21T07:26:48.022667638Z"
