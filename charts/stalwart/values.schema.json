@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["image", "postgresql", "gatewayAPI"],
+  "required": ["image", "service", "persistence"],
   "properties": {
     "replicaCount": { "type": "integer", "minimum": 1 },
 
@@ -15,86 +15,36 @@
       }
     },
 
-    "postgresql": {
-      "type": "object",
-      "required": ["uri"],
-      "properties": {
-        "uri": { "type": "string", "minLength": 1 }
-      }
-    },
-
-    "storage": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "enabled": { "type": "boolean" },
-            "size": { "type": "string" },
-            "storageClass": { "type": "string" },
-            "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"] },
-            "mountPath": { "type": "string" }
-          }
-        }
-      }
-    },
-
-    "resources": {
-      "type": "object",
-      "properties": {
-        "requests": {
-          "type": "object",
-          "properties": {
-            "cpu": { "type": "string" },
-            "memory": { "type": "string" }
-          }
-        },
-        "limits": {
-          "type": "object",
-          "properties": {
-            "cpu": { "type": "string" },
-            "memory": { "type": "string" }
-          }
-        }
-      }
-    },
-
     "service": {
       "type": "object",
+      "required": ["type", "ports"],
       "properties": {
         "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
-        "port": { "type": "integer" }
-      }
-    },
-
-    "gatewayAPI": {
-      "type": "object",
-      "required": ["enabled", "gatewayName", "httpRoute"],
-      "properties": {
-        "enabled": { "type": "boolean" },
-        "gatewayName": { "type": "string", "minLength": 1 },
-        "httpRoute": {
+        "ports": {
           "type": "object",
-          "required": ["hostnames", "pathPrefix", "servicePort"],
           "properties": {
-            "hostnames": {
-              "type": "array",
-              "items": { "type": "string", "minLength": 1 }
-            },
-            "pathPrefix": { "type": "string" },
-            "servicePort": { "type": "integer" }
+            "http": { "type": "integer" },
+            "https": { "type": "integer" },
+            "smtp": { "type": "integer" },
+            "submission": { "type": "integer" },
+            "smtps": { "type": "integer" },
+            "imap": { "type": "integer" },
+            "imaps": { "type": "integer" },
+            "sieve": { "type": "integer" }
           }
         }
       }
     },
 
-    "hpa": {
+    "persistence": {
       "type": "object",
+      "required": ["enabled", "accessMode", "size", "mountPath"],
       "properties": {
         "enabled": { "type": "boolean" },
-        "minReplicas": { "type": "integer", "minimum": 1 },
-        "maxReplicas": { "type": "integer", "minimum": 1 },
-        "targetCPUUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 }
+        "storageClass": { "type": "string" },
+        "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"] },
+        "size": { "type": "string" },
+        "mountPath": { "type": "string" }
       }
     }
   }

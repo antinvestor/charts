@@ -1,5 +1,24 @@
-1. SSL is terminated at the LB / Gateway API.
-2. Do not enable TLS inside the pod.
-3. Provide PostgreSQL URI in values:
-   postgresql:
-     uri: "postgresql://user:pass@host:5432/dbname?sslmode=require"
+Stalwart Mail Server deployed successfully!
+
+To get started, you may want to:
+
+1. Check the service status:
+   kubectl get svc {{ .Release.Name }}-stalwart
+
+2. Check the pod status:
+   kubectl get pods -l app.kubernetes.io/name=stalwart
+
+3. Access the mail server using the NodePort:
+   kubectl get svc {{ .Release.Name }}-stalwart -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}'
+
+The mail server is configured with the following ports:
+- HTTP: 8080
+- HTTPS: 443
+- SMTP: 25
+- Submission: 587
+- SMTPS: 465
+- IMAP: 143
+- IMAPS: 993
+- Sieve: 4190
+
+Storage is mounted at {{ .Values.persistence.mountPath }} with size {{ .Values.persistence.size }}.

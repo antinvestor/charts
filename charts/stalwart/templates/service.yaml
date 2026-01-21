@@ -3,12 +3,33 @@ kind: Service
 metadata:
   name: {{ include "stalwart.fullname" . }}
   labels:
-    {{ include "stalwart.labels" . | nindent 4 }}
+    {{- include "stalwart.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
-  selector:
-    app: stalwart
   ports:
     - name: http
-      port: {{ .Values.service.port }}
-      targetPort: http
+      port: 8080
+      targetPort: 8080
+    - name: https
+      port: 443
+      targetPort: 443
+    - name: smtp
+      port: 25
+      targetPort: 25
+    - name: submission
+      port: 587
+      targetPort: 587
+    - name: smtps
+      port: 465
+      targetPort: 465
+    - name: imap
+      port: 143
+      targetPort: 143
+    - name: imaps
+      port: 993
+      targetPort: 993
+    - name: sieve
+      port: 4190
+      targetPort: 4190
+  selector:
+    {{- include "stalwart.selectorLabels" . | nindent 4 }}

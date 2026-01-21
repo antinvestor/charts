@@ -3,58 +3,46 @@ kind: Deployment
 metadata:
   name: {{ include "stalwart.fullname" . }}
   labels:
-    {{ include "stalwart.labels" . | nindent 4 }}
+    {{- include "stalwart.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: stalwart
+      {{- include "stalwart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: stalwart
+        {{- include "stalwart.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "stalwart.fullname" . }}
       containers:
         - name: stalwart
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: POSTGRES_URI
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "stalwart.fullname" . }}-secret
-                  key: POSTGRES_URI
-            - name: STALWART_CONFIG
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "stalwart.fullname" . }}-config
-                  key: STALWART_CONFIG
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.path }}
-              port: {{ .Values.livenessProbe.port }}
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+              path: /healthz/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe.path }}
-              port: {{ .Values.readinessProbe.port }}
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+              path: /healthz/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          ports:
+            - containerPort: 8080
+            - containerPort: 443
+            - containerPort: 25
+            - containerPort: 587
+            - containerPort: 465
+            - containerPort: 143
+            - containerPort: 993
+            - containerPort: 4190
           volumeMounts:
-            - name: data
-              mountPath: {{ .Values.storage.data.mountPath }}
+            - name: stalwart-volume
+              mountPath: {{ .Values.persistence.mountPath }}
       volumes:
-        - name: data
+        - name: stalwart-volume
           persistentVolumeClaim:
-            claimName: {{ include "stalwart.fullname" . }}-data
+            claimName: {{ include "stalwart.fullname" . }}

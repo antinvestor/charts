@@ -1,60 +1,25 @@
-replicaCount: 2
-
 image:
   repository: stalwartlabs/stalwart
-  tag: latest
   pullPolicy: IfNotPresent
-
-postgresql:
-  uri: ""
-
-storage:
-  data:
-    enabled: true
-    size: 10Gi
-    storageClass: "standard"
-    accessMode: ReadWriteOnce
-    mountPath: /opt/stalwart/data
-
-resources:
-  requests:
-    cpu: 500m
-    memory: 1Gi
-  limits:
-    cpu: 2
-    memory: 4Gi
+  tag: "latest"
 
 service:
-  type: ClusterIP
-  port: 8080
+  type: NodePort
+  ports:
+    http: 8080
+    https: 443
+    smtp: 25
+    submission: 587
+    smtps: 465
+    imap: 143
+    imaps: 993
+    sieve: 4190
 
-livenessProbe:
-  path: /health
-  port: 8080
-  initialDelaySeconds: 30
-  periodSeconds: 15
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-readinessProbe:
-  path: /health
-  port: 8080
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-gatewayAPI:
+persistence:
   enabled: true
-  gatewayName: "stalwart-gateway"
-  httpRoute:
-    hostnames:
-      - "mail.example.com"
-    pathPrefix: "/"
-    servicePort: 8080
+  storageClass: "standard"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  mountPath: /opt/stalwart
 
-hpa:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 60
+replicaCount: 1
