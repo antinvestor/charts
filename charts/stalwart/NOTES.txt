@@ -1,0 +1,5 @@
+1. SSL is terminated at the LB / Gateway API.
+2. Do not enable TLS inside the pod.
+3. Provide PostgreSQL URI in values:
+   postgresql:
+     uri: "postgresql://user:pass@host:5432/dbname?sslmode=require"

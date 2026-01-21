@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "postgresql", "gatewayAPI"],
+  "properties": {
+    "replicaCount": { "type": "integer", "minimum": 1 },
+
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1 },
+        "pullPolicy": { "type": "string", "enum": ["IfNotPresent", "Always", "Never"] }
+      }
+    },
+
+    "postgresql": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "storage": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "size": { "type": "string" },
+            "storageClass": { "type": "string" },
+            "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"] },
+            "mountPath": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "resources": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "object",
+          "properties": {
+            "cpu": { "type": "string" },
+            "memory": { "type": "string" }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "cpu": { "type": "string" },
+            "memory": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+        "port": { "type": "integer" }
+      }
+    },
+
+    "gatewayAPI": {
+      "type": "object",
+      "required": ["enabled", "gatewayName", "httpRoute"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "gatewayName": { "type": "string", "minLength": 1 },
+        "httpRoute": {
+          "type": "object",
+          "required": ["hostnames", "pathPrefix", "servicePort"],
+          "properties": {
+            "hostnames": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "pathPrefix": { "type": "string" },
+            "servicePort": { "type": "integer" }
+          }
+        }
+      }
+    },
+
+    "hpa": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minReplicas": { "type": "integer", "minimum": 1 },
+        "maxReplicas": { "type": "integer", "minimum": 1 },
+        "targetCPUUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    }
+  }
+}

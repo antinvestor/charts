@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "stalwart.fullname" . }}
+  labels:
+    {{ include "stalwart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: stalwart
+  template:
+    metadata:
+      labels:
+        app: stalwart
+    spec:
+      serviceAccountName: {{ include "stalwart.fullname" . }}
+      containers:
+        - name: stalwart
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "stalwart.fullname" . }}-secret
+                  key: POSTGRES_URI
+            - name: STALWART_CONFIG
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "stalwart.fullname" . }}-config
+                  key: STALWART_CONFIG
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: {{ .Values.livenessProbe.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: {{ .Values.readinessProbe.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.storage.data.mountPath }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "stalwart.fullname" . }}-data

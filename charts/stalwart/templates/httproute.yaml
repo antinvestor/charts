@@ -1,0 +1,23 @@
+{{- if .Values.gatewayAPI.enabled }}
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: {{ include "stalwart.fullname" . }}-httproute
+  labels:
+    {{ include "stalwart.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gatewayAPI.gatewayName }}
+  hostnames:
+{{- range .Values.gatewayAPI.httpRoute.hostnames }}
+    - "{{ . }}"
+{{- end }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: "{{ .Values.gatewayAPI.httpRoute.pathPrefix }}"
+      backendRefs:
+        - name: {{ include "stalwart.fullname" . }}
+          port: {{ .Values.gatewayAPI.httpRoute.servicePort }}
+{{- end }}

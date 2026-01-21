@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "stalwart.fullname" . }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "stalwart.fullname" . }}-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "stalwart.fullname" . }}-rb
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "stalwart.fullname" . }}
+roleRef:
+  kind: Role
+  name: {{ include "stalwart.fullname" . }}-role
+  apiGroup: rbac.authorization.k8s.io
