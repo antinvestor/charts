@@ -39,5 +39,4 @@ spec:
           weight: 1
       timeouts:
         request: {{ .Values.gateway.timeouts.request }}
-        idle: {{ .Values.gateway.timeouts.idle }}
 {{- end }}

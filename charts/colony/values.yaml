@@ -226,7 +226,6 @@ gateway:
   hostname: ""  # Required if gateway enabled: e.g., myservice.antinvestor.com
   timeouts:
     request: 15s
-    idle: 30s
   # CORS settings for HTTPRoute
   cors:
     enabled: false
