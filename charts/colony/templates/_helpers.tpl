@@ -12,9 +12,7 @@ Common labels
 */}}
 {{- define "colony.labels" -}}
 helm.sh/chart: {{ include "colony.chart" . }}
-{{- if .Values.image.tag }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
+app.kubernetes.io/version: {{ include "colony.imageTag" . | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- with .Values.labels }}
 {{ toYaml . }}
@@ -45,5 +43,12 @@ ServiceAccount name
 Image tag hash
 */}}
 {{- define "colony.imageHash" -}}
-{{- (sha256sum .Values.image.tag) | trunc 8 -}}
+{{- (sha256sum (include "colony.imageTag" .)) | trunc 8 -}}
+{{- end -}}
+
+{{/*
+Image tag (defaults to Chart.AppVersion if not set)
+*/}}
+{{- define "colony.imageTag" -}}
+{{- default .Chart.AppVersion .Values.image.tag -}}
 {{- end -}}

@@ -431,7 +431,7 @@ The `gateway.hostname` is used for:
 
 ### Values Schema
 The chart includes `values.schema.json` for validation. Helm 3.4+ will validate:
-- Required fields (`image.repository`, `image.tag`)
+- Required fields (`image.repository`) and optional (`image.tag`, defaults to `Chart.appVersion`)
 - Data types and value ranges
 - Enum values
 

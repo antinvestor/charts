@@ -9,7 +9,7 @@
 # Image configuration
 image:
   repository: "ghcr.io/antinvestor/example-service"  # Required: Set to your service repository
-  tag: "v1.0.0"  # Required: Set to your service version
+  tag: "v1.0.0"  # Optional: Defaults to Chart.appVersion when unset
   digest: "sha256:ec0119616bb8be9199575c05bfc23a6bf0fbdb0690ee15834e7b43bc3f4f6017"
   pullPolicy: IfNotPresent
   pullSecrets:

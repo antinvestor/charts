@@ -33,7 +33,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: "{{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}"
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ include \"colony.imageTag\" . }}"
           # imageDigest: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
