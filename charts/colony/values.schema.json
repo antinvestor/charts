@@ -265,10 +265,32 @@
           "type": "string",
           "enum": ["http", "grpc"]
         },
-        "hostname": {
-          "type": "string"
+        "hostnames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": ["hostnames"],
+            "properties": {
+              "hostnames": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
     },
     "externalDNS": {
       "type": "object",

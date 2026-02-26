@@ -177,7 +177,9 @@ gateway:
     name: default
     namespace: envoy-gateway-system
     sectionName: https
-  hostname: myservice.antinvestor.com  # Required: Set your hostname
+  hostnames:
+    - myservice.antinvestor.com
+    - myservice.antinvestor.org
   cors:
     enabled: true
     allowOrigins:
@@ -202,7 +204,7 @@ gateway:
     allowCredentials: true
     maxAge: 86400
 
-# External DNS (uses gateway.hostname by default)
+# External DNS (uses gateway.hostnames by default)
 externalDNS:
   enabled: true
   recordTTL: 180

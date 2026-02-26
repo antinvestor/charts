@@ -17,10 +17,10 @@ Resources Deployed:
   ✓ PodDisruptionBudget
 {{- end }}
 {{- if .Values.gateway.enabled }}
-  ✓ {{ if eq .Values.gateway.type "http" }}HTTPRoute{{ else }}GRPCRoute{{ end }} ({{ .Values.gateway.hostname }})
+  ✓ {{ if eq .Values.gateway.type "http" }}HTTPRoute{{ else }}GRPCRoute{{ end }} ({{ join ", " .Values.gateway.hostnames }})
 {{- end }}
 {{- if .Values.externalDNS.enabled }}
-  ✓ DNSEndpoint ({{ .Values.gateway.hostname }})
+  ✓ DNSEndpoint ({{ join ", " .Values.gateway.hostnames }})
 {{- end }}
 {{- if .Values.fluxcd.enabled }}
   ✓ FluxCD ImageRepository and ImagePolicy
@@ -37,7 +37,10 @@ Endpoints:
   gRPC: {{ .Release.Name }}.{{ .Release.Namespace }}:{{ .Values.service.grpc.port }}
 {{- end }}
 {{- if .Values.gateway.enabled }}
-  External: https://{{ .Values.gateway.hostname }}
+  External:
+  {{- range .Values.gateway.hostnames }}
+    https://{{ . }}
+  {{- end }}
 {{- end }}
 
 Configuration:

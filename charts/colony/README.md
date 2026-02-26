@@ -2,7 +2,7 @@
 
 Production-ready Helm chart for deploying microservices on Kubernetes with standardized patterns for OAuth2, OpenTelemetry, and Gateway API.
 
-**Version:** 1.4.7
+**Version:** 1.6.4
 
 ## Quick Start
 
@@ -21,7 +21,8 @@ kubectl create secret generic myservice-oauth2-cli \
 helm install myservice ./colony \
   --set image.repository=ghcr.io/antinvestor/myservice \
   --set image.tag=v1.0.0 \
-  --set gateway.hostname=myservice.antinvestor.com \
+  --set gateway.hostnames[0]=myservice.antinvestor.com \
+  --set gateway.hostnames[1]=myservice.antinvestor.org \
   -n core
 ```
 
@@ -55,7 +56,9 @@ image:
 
 gateway:
   enabled: true
-  hostname: myservice.antinvestor.com  # Required
+  hostnames:  # Required
+    - myservice.antinvestor.com
+    - myservice.antinvestor.org
 
 oauth2:
   enabled: true
@@ -149,7 +152,8 @@ serviceAccount:
 gateway:
   enabled: true
   type: http  # or grpc
-  hostname: myservice.antinvestor.com  # Required
+  hostnames:  # Required
+    - myservice.antinvestor.com
   parentRef:
     kind: Gateway
     name: default
@@ -210,7 +214,7 @@ Automatically injects Kubernetes metadata (pod name, namespace, IP, node) into O
 ```yaml
 externalDNS:
   enabled: true
-  # Uses gateway.hostname automatically
+  # Uses gateway.hostnames automatically
   recordTTL: 180
   recordType: CNAME
   targets:
@@ -329,7 +333,8 @@ image:
 gateway:
   enabled: true
   type: http
-  hostname: api.antinvestor.com
+  hostnames:
+    - api.antinvestor.com
   cors:
     enabled: true
     allowOrigins: ["https://*"]
@@ -363,7 +368,8 @@ service:
 gateway:
   enabled: true
   type: grpc
-  hostname: profile.antinvestor.com
+  hostnames:
+    - profile.antinvestor.com
 
 oauth2:
   enabled: true
@@ -424,8 +430,8 @@ helm install myservice ./colony -n core
 helm install myservice ./colony -n staging
 ```
 
-### Gateway Hostname
-The `gateway.hostname` is used for:
+### Gateway Hostnames
+The `gateway.hostnames` list is used for:
 - HTTPRoute/GRPCRoute hostname
 - External DNS record (if enabled)
 

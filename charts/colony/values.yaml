@@ -214,7 +214,7 @@ opentelemetry:
 
 # Gateway API configuration
 gateway:
-  enabled: true
+  enabled: false
   # Type: http or grpc
   type: http
   parentRef:
@@ -222,8 +222,8 @@ gateway:
     name: default
     namespace: envoy-gateway-system
     sectionName: https
-  # Hostname for external access (also used for externalDNS if enabled)
-  hostname: ""  # Required if gateway enabled: e.g., myservice.antinvestor.com
+  # Hostnames for external access (also used for externalDNS if enabled)
+  hostnames: []  # e.g., ["myservice.antinvestor.com", "myservice.antinvestor.org"]
   timeouts:
     request: 15s
   # CORS settings for HTTPRoute
@@ -255,7 +255,7 @@ gateway:
 # External DNS configuration
 externalDNS:
   enabled: false
-  # DNS name defaults to gateway.hostname
+  # DNS name defaults to gateway.hostnames
   recordTTL: 180
   recordType: CNAME
   targets:

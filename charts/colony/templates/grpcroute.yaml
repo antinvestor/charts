@@ -13,7 +13,9 @@ spec:
       namespace: {{ .Values.gateway.parentRef.namespace }}
       sectionName: {{ .Values.gateway.parentRef.sectionName }}
   hostnames:
-    - {{ .Values.gateway.hostname | quote }}
+    {{- range .Values.gateway.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
   rules:
     - backendRefs:
         - name: {{ .Release.Name }}

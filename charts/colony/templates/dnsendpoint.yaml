@@ -1,21 +1,24 @@
 {{- if .Values.externalDNS.enabled }}
+{{- range $index, $hostname := .Values.gateway.hostnames }}
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ printf "%s-%d" $.Release.Name $index }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "colony.labels" . | nindent 4 }}
+    {{- include "colony.labels" $ | nindent 4 }}
 spec:
   endpoints:
-    - dnsName: {{ .Values.gateway.hostname | quote }}
-      recordTTL: {{ .Values.externalDNS.recordTTL }}
-      recordType: {{ .Values.externalDNS.recordType }}
+    - dnsName: {{ $hostname | quote }}
+      recordTTL: {{ $.Values.externalDNS.recordTTL }}
+      recordType: {{ $.Values.externalDNS.recordType }}
       targets:
-        {{- toYaml .Values.externalDNS.targets | nindent 8 }}
-      {{- if .Values.externalDNS.cloudflareProxied }}
+        {{- toYaml $.Values.externalDNS.targets | nindent 8 }}
+      {{- if $.Values.externalDNS.cloudflareProxied }}
       providerSpecific:
         - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
           value: "true"
       {{- end }}
+---
+{{- end }}
 {{- end }}

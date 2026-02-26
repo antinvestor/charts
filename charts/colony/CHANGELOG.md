@@ -1,5 +1,15 @@
 # Colony Helm Chart Changelog
 
+## Version 1.6.4 - Gateway hostnames and routing fixes (2026-02-26)
+
+**Gateway hostnames**
+- Add `gateway.hostnames` list (required for gateway host configuration)
+- Remove `gateway.hostname` to avoid confusion; use `gateway.hostnames` only
+- Update HTTPRoute/GRPCRoute, DNSEndpoint, and notes to use hostnames list
+
+**Routing**
+- Use `PathPrefix "/"` for HTTPRoute matches to allow Connect RPC paths
+
 ## Version 1.4.9- Remove unnecessary logging section (2025-12-8)
 **Cleanup logging section**
 - Remove unwanted logging section from chart
