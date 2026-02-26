@@ -154,6 +154,13 @@ gateway:
   type: http  # or grpc
   hostnames:  # Required
     - myservice.antinvestor.com
+  httpRoute:
+    # Optional: override HTTPRoute hostnames (defaults to gateway.hostnames)
+    hostnames: []
+    # Optional: custom HTTPRoute rules (replaces default "/" rule)
+    rules: []
+    # Optional: full HTTPRoute spec override (replaces parentRefs/hostnames/rules)
+    spec: {}
   parentRef:
     kind: Gateway
     name: default

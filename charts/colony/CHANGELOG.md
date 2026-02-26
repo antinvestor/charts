@@ -1,5 +1,8 @@
 # Colony Helm Chart Changelog
 
+## Version 1.6.5 - HTTPRoute customization (2026-02-26)
+- Add full HTTPRoute spec override and custom rules/hostnames for per-service routing.
+
 ## Version 1.6.4 - Gateway hostnames and routing fixes (2026-02-26)
 
 **Gateway hostnames**

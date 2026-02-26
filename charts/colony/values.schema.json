@@ -270,6 +270,25 @@
           "items": {
             "type": "string"
           }
+        },
+        "httpRoute": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "object",
+              "description": "Full HTTPRoute spec override (replaces parentRefs/hostnames/rules)"
+            },
+            "hostnames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rules": {
+              "type": "array",
+              "description": "Custom HTTPRoute rules array (replaces default rule)"
+            }
+          }
         }
       },
       "allOf": [
@@ -282,12 +301,23 @@
             }
           },
           "then": {
-            "required": ["hostnames"],
-            "properties": {
-              "hostnames": {
-                "minItems": 1
+            "anyOf": [
+              {
+                "required": ["hostnames"],
+                "properties": {
+                  "hostnames": {
+                    "minItems": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "httpRoute": {
+                    "required": ["spec"]
+                  }
+                }
               }
-            }
+            ]
           }
         }
       ]

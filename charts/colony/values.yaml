@@ -217,6 +217,13 @@ gateway:
   enabled: false
   # Type: http or grpc
   type: http
+  httpRoute:
+    # Full spec override for HTTPRoute. When set, it replaces parentRefs/hostnames/rules.
+    spec: {}
+    # Custom hostnames for HTTPRoute only (defaults to gateway.hostnames)
+    hostnames: []
+    # Custom HTTPRoute rules array. When set, it replaces the default "/" rule.
+    rules: []
   parentRef:
     kind: Gateway
     name: default
