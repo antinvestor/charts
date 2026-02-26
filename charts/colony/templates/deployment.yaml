@@ -79,7 +79,7 @@ spec:
 
       containers:
         - name: {{ .Release.Name }}
-          image: "{{ .Values.image.repository }}:{{ include \"colony.imageTag\" . }}"
+          image: "{{ .Values.image.repository }}:{{ include "colony.imageTag" . }}"
           # imageDigest: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
@@ -171,7 +171,7 @@ spec:
             - name: OTEL_SERVICE_NAME
               value: {{ .Release.Name | quote }}
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: "service.name={{ .Release.Name }},service.namespace={{ .Release.Namespace }},service.version={{ include \"colony.imageTag\" . }},deployment.environment={{ .Values.opentelemetry.environment }},k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.deployment.name={{ .Release.Name }},k8s.pod.name=$(K8S_POD_NAME),k8s.pod.ip=$(K8S_POD_IP),k8s.node.name=$(K8S_NODE_NAME)"
+              value: "service.name={{ .Release.Name }},service.namespace={{ .Release.Namespace }},service.version={{ include "colony.imageTag" . }},deployment.environment={{ .Values.opentelemetry.environment }},k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.deployment.name={{ .Release.Name }},k8s.pod.name=$(K8S_POD_NAME),k8s.pod.ip=$(K8S_POD_IP),k8s.node.name=$(K8S_NODE_NAME)"
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: {{ .Values.opentelemetry.protocol }}
             - name: OTEL_TRACES_EXPORTER
