@@ -186,8 +186,13 @@ oauth2:
   # Secret reference for OAuth2 client credentials
   # Create the secret manually before deployment:
   # kubectl create secret generic <release-name>-oauth2-cli \
+  #   --from-literal=client-id='<release-name>' \
   #   --from-literal=client-secret='your-secret-here' \
   #   -n <namespace>
+  clientId: ""
+  clientIdRef:
+    name: ""  # Leave empty to use: {release-name}-oauth2-cli
+    key: client-id  # Key name in the secret
   clientSecretRef:
     name: ""  # Leave empty to use: {release-name}-oauth2-cli
     key: client-secret  # Key name in the secret

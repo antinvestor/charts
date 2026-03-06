@@ -138,6 +138,7 @@ logging:
 # OAuth2 configuration
 # Create the secret before deployment:
 # kubectl create secret generic myservice-oauth2-cli \
+#   --from-literal=client-id='myservice' \
 #   --from-literal=client-secret='your-secret-here' -n core
 oauth2:
   enabled: true
@@ -145,6 +146,9 @@ oauth2:
   adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
   
   # Secret reference (defaults to {release-name}-oauth2-cli)
+  clientIdRef:
+    name: ""  # Leave empty to use default: myservice-oauth2-cli
+    key: client-id
   clientSecretRef:
     name: ""  # Leave empty to use default: myservice-oauth2-cli
     key: client-secret
