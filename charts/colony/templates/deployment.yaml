@@ -130,10 +130,11 @@ spec:
             - name: OAUTH2_SERVICE_ADMIN_URI
               value: {{ .Values.oauth2.adminUri }}
             {{- if .Values.oauth2.workloadAPI.enabled }}
+            {{- $socketPath := .Values.oauth2.workloadAPI.socketPath }}
             - name: WORKLOAD_API_TRUSTED_DOMAIN
               value: {{ .Values.oauth2.workloadAPI.trustDomain | quote }}
             - name: SPIFFE_ENDPOINT_SOCKET
-              value: {{ .Values.oauth2.workloadAPI.socketPath | quote }}
+              value: {{ if or (hasPrefix "unix://" $socketPath) (hasPrefix "tcp://" $socketPath) }}{{ $socketPath | quote }}{{ else }}{{ printf "unix://%s" $socketPath | quote }}{{ end }}
             {{- end }}
             {{- if .Values.oauth2.clientId }}
             - name: OAUTH2_SERVICE_CLIENT_ID
