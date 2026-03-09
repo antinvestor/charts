@@ -1,11 +1,12 @@
 {{- if .Values.migration.enabled }}
+{{- $migrationJobName := printf "%s-migration-%d" .Release.Name .Release.Revision | trunc 63 | trimSuffix "-" }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}
+  name: {{ $migrationJobName }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ $migrationJobName }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: migration
     {{- include "colony.labels" . | nindent 4 }}
@@ -34,7 +35,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}
+        app.kubernetes.io/name: {{ $migrationJobName }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: migration
     spec:
@@ -46,7 +47,7 @@ spec:
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       restartPolicy: Never
       containers:
-        - name: "{{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}"
+        - name: "{{ $migrationJobName }}"
           image: "{{ .Values.image.repository }}:{{ include "colony.imageTag" . }}"
           # imageDigest: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
