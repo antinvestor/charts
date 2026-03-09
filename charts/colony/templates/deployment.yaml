@@ -76,6 +76,8 @@ spec:
       dnsConfig:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- $probeMode := .Values.probes.mode | default "auto" }}
+      {{- $useTCPProbe := or (eq $probeMode "tcp") (and (eq $probeMode "auto") .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled) }}
 
       containers:
         - name: {{ .Release.Name }}
@@ -97,15 +99,36 @@ spec:
             {{- end }}
           {{- if .Values.livenessProbe }}
           livenessProbe:
+            {{- if $useTCPProbe }}
+            tcpSocket:
+              port: {{ .Values.probes.portName | quote }}
+            {{- $probe := omit .Values.livenessProbe "httpGet" "tcpSocket" "grpc" "exec" }}
+            {{- toYaml $probe | nindent 12 }}
+            {{- else }}
             {{- toYaml .Values.livenessProbe | nindent 12 }}
+            {{- end }}
           {{- end }}
           {{- if .Values.readinessProbe }}
           readinessProbe:
+            {{- if $useTCPProbe }}
+            tcpSocket:
+              port: {{ .Values.probes.portName | quote }}
+            {{- $probe := omit .Values.readinessProbe "httpGet" "tcpSocket" "grpc" "exec" }}
+            {{- toYaml $probe | nindent 12 }}
+            {{- else }}
             {{- toYaml .Values.readinessProbe | nindent 12 }}
+            {{- end }}
           {{- end }}
           {{- if .Values.startupProbe }}
           startupProbe:
+            {{- if $useTCPProbe }}
+            tcpSocket:
+              port: {{ .Values.probes.portName | quote }}
+            {{- $probe := omit .Values.startupProbe "httpGet" "tcpSocket" "grpc" "exec" }}
+            {{- toYaml $probe | nindent 12 }}
+            {{- else }}
             {{- toYaml .Values.startupProbe | nindent 12 }}
+            {{- end }}
           {{- end }}
           {{- if .Values.lifecycle }}
           lifecycle:

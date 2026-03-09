@@ -105,6 +105,13 @@ service:
     appProtocol: ""  # e.g., http, https, kubernetes.io/h2c
 
 # Health probes
+probes:
+  # auto: tcpSocket for workload-API enabled services, otherwise use the configured probe handlers.
+  # http: always use the probe handlers below as provided.
+  # tcp: always replace the probe handlers below with tcpSocket on the named port.
+  mode: auto
+  portName: http
+
 livenessProbe:
   httpGet:
     path: /healthz

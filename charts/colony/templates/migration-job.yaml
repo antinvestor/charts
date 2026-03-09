@@ -30,6 +30,8 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "colony.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       restartPolicy: Never
       containers:
         - name: "{{ printf "%s-migration" .Release.Name | trunc 63 | trimSuffix "-" }}"
@@ -44,24 +46,101 @@ spec:
           args:
             {{- toYaml .Values.migration.args | nindent 12 }}
           {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: DO_MIGRATION
               value: "true"
+
+            {{- if .Values.oauth2.enabled }}
+            {{- $serviceAccountName := include "colony.serviceAccountName" . }}
+            - name: OAUTH2_SERVICE_URI
+              value: {{ .Values.oauth2.serviceUri }}
+            - name: OAUTH2_SERVICE_ADMIN_URI
+              value: {{ .Values.oauth2.adminUri }}
+            {{- if .Values.oauth2.workloadAPI.enabled }}
+            {{- $socketPath := .Values.oauth2.workloadAPI.socketPath }}
+            - name: WORKLOAD_API_TRUSTED_DOMAIN
+              value: {{ .Values.oauth2.workloadAPI.trustDomain | quote }}
+            - name: SPIFFE_ENDPOINT_SOCKET
+              value: {{ if or (hasPrefix "unix://" $socketPath) (hasPrefix "tcp://" $socketPath) }}{{ $socketPath | quote }}{{ else }}{{ printf "unix://%s" $socketPath | quote }}{{ end }}
+            {{- end }}
+            {{- if .Values.oauth2.clientId }}
+            - name: OAUTH2_SERVICE_CLIENT_ID
+              value: {{ .Values.oauth2.clientId }}
+            {{- else if .Values.oauth2.clientIdRef.name }}
+            - name: OAUTH2_SERVICE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.oauth2.clientIdRef.name }}
+                  key: {{ .Values.oauth2.clientIdRef.key }}
+            {{- else }}
+            - name: OAUTH2_SERVICE_CLIENT_ID
+              value: {{ .Release.Name }}
+            {{- end }}
+            {{- if .Values.oauth2.clientSecret }}
+            - name: OAUTH2_SERVICE_CLIENT_SECRET
+              value: {{ .Values.oauth2.clientSecret }}
+            {{- else }}
+            - name: OAUTH2_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.oauth2.clientSecretRef.name | default (printf "%s-oauth2-cli" .Release.Name) }}
+                  key: {{ .Values.oauth2.clientSecretRef.key }}
+            {{- end }}
+            {{- if and .Values.oauth2.workloadAPI.enabled .Values.oauth2.privateJWT.enabled }}
+            - name: OAUTH2_PRIVATE_JWT_KEY
+              value: {{ dict "source" .Values.oauth2.privateJWT.source "key_id" (.Values.oauth2.privateJWT.keyId | default .Release.Name) "audience" (.Values.oauth2.privateJWT.audience | default (printf "%s/oauth2/token" (trimSuffix "/" .Values.oauth2.serviceUri))) "spiffe_id" (.Values.oauth2.privateJWT.spiffeID | default (printf "spiffe://%s/ns/%s/sa/%s" .Values.oauth2.workloadAPI.trustDomain .Release.Namespace $serviceAccountName)) "hint" .Values.oauth2.privateJWT.hint | toJson | quote }}
+            {{- end }}
+            {{- if .Values.oauth2.audience }}
+            - name: OAUTH2_SERVICE_AUDIENCE
+              value: {{ .Values.oauth2.audience }}
+            {{- end }}
+            - name: OAUTH2_JWT_VERIFY_AUDIENCE
+              value: {{ .Values.oauth2.jwtVerifyAudience }}
+            {{- end }}
+
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
             # Additional environment variables for migration
             {{- with .Values.migration.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
 
-          {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
+          {{- if or (and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled) .Values.volumeMounts .Values.migration.securityContext.readOnlyRootFilesystem }}
           volumeMounts:
+            {{- if and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled }}
+            - name: spire-workload-api
+              mountPath: {{ .Values.oauth2.workloadAPI.socketMountPath | quote }}
+              readOnly: true
+            {{- end }}
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
             - name: tmp
               mountPath: /tmp
+            {{- end }}
           {{- end }}
 
-      {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
+      {{- if or (and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled) .Values.volumes .Values.migration.securityContext.readOnlyRootFilesystem }}
       volumes:
+        {{- if and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled }}
+        - name: spire-workload-api
+          csi:
+            driver: {{ .Values.oauth2.workloadAPI.csiDriver | quote }}
+            readOnly: true
+        {{- end }}
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
         - name: tmp
           emptyDir: {}
+        {{- end }}
       {{- end }}
 {{- end }}
