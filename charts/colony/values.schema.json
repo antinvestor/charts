@@ -223,6 +223,21 @@
         "adminUri": {
           "type": "string"
         },
+        "clientId": {
+          "type": "string"
+        },
+        "clientIdRef": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "required": ["key"]
+        },
         "clientSecretRef": {
           "type": "object",
           "properties": {
@@ -234,6 +249,58 @@
             }
           },
           "required": ["key"]
+        },
+        "workloadAPI": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "trustDomain": {
+              "type": "string"
+            },
+            "socketPath": {
+              "type": "string"
+            },
+            "socketMountPath": {
+              "type": "string"
+            },
+            "csiDriver": {
+              "type": "string"
+            }
+          }
+        },
+        "privateJWT": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "source": {
+              "type": "string"
+            },
+            "keyId": {
+              "type": "string"
+            },
+            "audience": {
+              "type": "string"
+            },
+            "spiffeID": {
+              "type": "string"
+            },
+            "hint": {
+              "type": "string"
+            },
+            "jwksPath": {
+              "type": "string"
+            }
+          }
+        },
+        "audience": {
+          "type": "string"
+        },
+        "jwtVerifyAudience": {
+          "type": "string"
         }
       }
     },

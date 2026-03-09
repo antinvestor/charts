@@ -183,6 +183,13 @@ oauth2:
   serviceUri: https://oauth2.antinvestor.com
   adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
 
+  workloadAPI:
+    enabled: true
+    trustDomain: stawi.org
+    socketPath: /spiffe-workload-api/spire-agent.sock
+    socketMountPath: /spiffe-workload-api
+    csiDriver: csi.spiffe.io
+
   # Secret reference for OAuth2 client credentials
   # Create the secret manually before deployment:
   # kubectl create secret generic <release-name>-oauth2-cli \
@@ -196,6 +203,15 @@ oauth2:
   clientSecretRef:
     name: ""  # Leave empty to use: {release-name}-oauth2-cli
     key: client-secret  # Key name in the secret
+
+  privateJWT:
+    enabled: true
+    source: workload_api
+    keyId: ""
+    audience: ""
+    spiffeID: ""
+    hint: ""
+    jwksPath: /.well-known/oauth2-client-jwks.json
 
   audience: ""  # Services this service can access
   jwtVerifyAudience: ""  # This service's audience (defaults to {release-name})
