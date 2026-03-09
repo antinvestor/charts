@@ -19,6 +19,12 @@ spec:
   activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
   parallelism: 1
   completions: 1
+  {{- $migrationEnvNames := dict }}
+  {{- range .Values.migration.env }}
+  {{- if .name }}
+  {{- $_ := set $migrationEnvNames .name true }}
+  {{- end }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -103,7 +109,11 @@ spec:
             {{- end }}
 
             {{- with .Values.env }}
-            {{- toYaml . | nindent 12 }}
+            {{- range . }}
+            {{- if or (not .name) (not (hasKey $migrationEnvNames .name)) }}
+            {{- toYaml (list .) | nindent 12 }}
+            {{- end }}
+            {{- end }}
             {{- end }}
 
             # Additional environment variables for migration
