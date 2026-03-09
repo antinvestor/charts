@@ -138,12 +138,15 @@ spec:
             {{- if .Values.oauth2.clientId }}
             - name: OAUTH2_SERVICE_CLIENT_ID
               value: {{ .Values.oauth2.clientId }}
-            {{- else }}
+            {{- else if .Values.oauth2.clientIdRef.name }}
             - name: OAUTH2_SERVICE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.oauth2.clientIdRef.name | default (printf "%s-oauth2-cli" .Release.Name) }}
+                  name: {{ .Values.oauth2.clientIdRef.name }}
                   key: {{ .Values.oauth2.clientIdRef.key }}
+            {{- else }}
+            - name: OAUTH2_SERVICE_CLIENT_ID
+              value: {{ .Release.Name }}
             {{- end }}
             {{- if .Values.oauth2.clientSecret }}
             - name: OAUTH2_SERVICE_CLIENT_SECRET
