@@ -25,6 +25,12 @@ spec:
   {{- $_ := set $migrationEnvNames .name true }}
   {{- end }}
   {{- end }}
+  {{- $customMountPaths := dict }}
+  {{- range .Values.volumeMounts }}
+  {{- if .mountPath }}
+  {{- $_ := set $customMountPaths .mountPath true }}
+  {{- end }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -108,17 +114,17 @@ spec:
               value: {{ .Values.oauth2.jwtVerifyAudience }}
             {{- end }}
 
+            # Additional environment variables for migration
+            {{- with .Values.migration.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
             {{- with .Values.env }}
             {{- range . }}
             {{- if or (not .name) (not (hasKey $migrationEnvNames .name)) }}
             {{- toYaml (list .) | nindent 12 }}
             {{- end }}
             {{- end }}
-            {{- end }}
-
-            # Additional environment variables for migration
-            {{- with .Values.migration.env }}
-            {{- toYaml . | nindent 12 }}
             {{- end }}
 
           {{- if or (and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled) .Values.volumeMounts .Values.migration.securityContext.readOnlyRootFilesystem }}
@@ -131,7 +137,7 @@ spec:
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
+            {{- if and .Values.migration.securityContext.readOnlyRootFilesystem (not (hasKey $customMountPaths "/tmp")) }}
             - name: tmp
               mountPath: /tmp
             {{- end }}
@@ -148,7 +154,7 @@ spec:
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.migration.securityContext.readOnlyRootFilesystem }}
+        {{- if and .Values.migration.securityContext.readOnlyRootFilesystem (not (hasKey $customMountPaths "/tmp")) }}
         - name: tmp
           emptyDir: {}
         {{- end }}
