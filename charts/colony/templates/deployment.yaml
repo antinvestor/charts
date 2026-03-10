@@ -76,8 +76,6 @@ spec:
       dnsConfig:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- $probeMode := .Values.probes.mode | default "auto" }}
-      {{- $useTCPProbe := or (eq $probeMode "tcp") (and (eq $probeMode "auto") .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled) }}
 
       containers:
         - name: {{ .Release.Name }}
@@ -99,36 +97,15 @@ spec:
             {{- end }}
           {{- if .Values.livenessProbe }}
           livenessProbe:
-            {{- if $useTCPProbe }}
-            tcpSocket:
-              port: {{ .Values.probes.portName | quote }}
-            {{- $probe := omit .Values.livenessProbe "httpGet" "tcpSocket" "grpc" "exec" }}
-            {{- toYaml $probe | nindent 12 }}
-            {{- else }}
             {{- toYaml .Values.livenessProbe | nindent 12 }}
-            {{- end }}
           {{- end }}
           {{- if .Values.readinessProbe }}
           readinessProbe:
-            {{- if $useTCPProbe }}
-            tcpSocket:
-              port: {{ .Values.probes.portName | quote }}
-            {{- $probe := omit .Values.readinessProbe "httpGet" "tcpSocket" "grpc" "exec" }}
-            {{- toYaml $probe | nindent 12 }}
-            {{- else }}
             {{- toYaml .Values.readinessProbe | nindent 12 }}
-            {{- end }}
           {{- end }}
           {{- if .Values.startupProbe }}
           startupProbe:
-            {{- if $useTCPProbe }}
-            tcpSocket:
-              port: {{ .Values.probes.portName | quote }}
-            {{- $probe := omit .Values.startupProbe "httpGet" "tcpSocket" "grpc" "exec" }}
-            {{- toYaml $probe | nindent 12 }}
-            {{- else }}
             {{- toYaml .Values.startupProbe | nindent 12 }}
-            {{- end }}
           {{- end }}
           {{- if .Values.lifecycle }}
           lifecycle:
@@ -152,13 +129,7 @@ spec:
               value: {{ .Values.oauth2.serviceUri }}
             - name: OAUTH2_SERVICE_ADMIN_URI
               value: {{ .Values.oauth2.adminUri }}
-            {{- if .Values.oauth2.workloadAPI.enabled }}
-            {{- $socketPath := .Values.oauth2.workloadAPI.socketPath }}
-            - name: WORKLOAD_API_TRUSTED_DOMAIN
-              value: {{ .Values.oauth2.workloadAPI.trustDomain | quote }}
-            - name: SPIFFE_ENDPOINT_SOCKET
-              value: {{ if or (hasPrefix "unix://" $socketPath) (hasPrefix "tcp://" $socketPath) }}{{ $socketPath | quote }}{{ else }}{{ printf "unix://%s" $socketPath | quote }}{{ end }}
-            {{- end }}
+
             {{- if .Values.oauth2.clientId }}
             - name: OAUTH2_SERVICE_CLIENT_ID
               value: {{ .Values.oauth2.clientId }}
@@ -181,10 +152,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.oauth2.clientSecretRef.name | default (printf "%s-oauth2-cli" .Release.Name) }}
                   key: {{ .Values.oauth2.clientSecretRef.key }}
-            {{- end }}
-            {{- if and .Values.oauth2.workloadAPI.enabled .Values.oauth2.privateJWT.enabled }}
-            - name: OAUTH2_PRIVATE_JWT_KEY
-              value: {{ dict "source" .Values.oauth2.privateJWT.source "key_id" (.Values.oauth2.privateJWT.keyId | default .Release.Name) "audience" (.Values.oauth2.privateJWT.audience | default (printf "%s/oauth2/token" (trimSuffix "/" .Values.oauth2.serviceUri))) "spiffe_id" (.Values.oauth2.privateJWT.spiffeID | default (printf "spiffe://%s/ns/%s/sa/%s" .Values.oauth2.workloadAPI.trustDomain .Release.Namespace $serviceAccountName)) "hint" .Values.oauth2.privateJWT.hint | toJson | quote }}
             {{- end }}
             {{- if .Values.oauth2.audience }}
             - name: OAUTH2_SERVICE_AUDIENCE
@@ -243,26 +210,15 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           
-          {{- if or (and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled) .Values.volumeMounts }}
+          {{- if .Values.volumeMounts }}
           volumeMounts:
-            {{- if and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled }}
-            - name: spire-workload-api
-              mountPath: {{ .Values.oauth2.workloadAPI.socketMountPath | quote }}
-              readOnly: true
-            {{- end }}
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
       
-      {{- if or (and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled) .Values.volumes }}
+      {{- if .Values.volumes }}
       volumes:
-        {{- if and .Values.oauth2.enabled .Values.oauth2.workloadAPI.enabled }}
-        - name: spire-workload-api
-          csi:
-            driver: {{ .Values.oauth2.workloadAPI.csiDriver | quote }}
-            readOnly: true
-        {{- end }}
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
