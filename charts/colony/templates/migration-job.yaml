@@ -73,6 +73,10 @@ spec:
               value: {{ .Values.oauth2.serviceUri }}
             - name: OAUTH2_SERVICE_ADMIN_URI
               value: {{ .Values.oauth2.adminUri }}
+            {{- if .Values.oauth2.tokenEndpointAuthMethod }}
+            - name: OAUTH2_TOKEN_ENDPOINT_AUTH_METHOD
+              value: {{ .Values.oauth2.tokenEndpointAuthMethod | quote }}
+            {{- end }}
             {{- if .Values.oauth2.workloadAPI.enabled }}
             {{- $socketPath := .Values.oauth2.workloadAPI.socketPath }}
             - name: WORKLOAD_API_TRUSTED_DOMAIN
