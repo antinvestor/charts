@@ -211,10 +211,11 @@ oauth2:
     csiDriver: csi.spiffe.io
 
   # Private Key JWT configuration (RFC 7523)
-  # Requires workloadAPI.enabled=true when source is workload_api
+  # Sources: workload_api (requires workloadAPI.enabled), url (requires signerUrl)
   privateJWT:
     enabled: false
-    source: workload_api
+    source: url  # workload_api or url
+    signerUrl: ""  # JWKS URL for fetching signing keys (e.g. Hydra admin /admin/keys/{set})
     keyId: ""  # Defaults to release name
     audience: ""  # Defaults to {serviceUri}/oauth2/token
     spiffeID: ""  # Auto-constructed from workloadAPI.trustDomain + namespace + serviceAccount

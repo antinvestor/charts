@@ -282,7 +282,13 @@
               "type": "boolean"
             },
             "source": {
-              "type": "string"
+              "type": "string",
+              "description": "Signer source: url (JWKS URL) or workload_api (SPIFFE)",
+              "enum": ["url", "workload_api"]
+            },
+            "signerUrl": {
+              "type": "string",
+              "description": "JWKS URL for fetching signing keys (e.g. Hydra admin /admin/keys/{set})"
             },
             "keyId": {
               "type": "string"

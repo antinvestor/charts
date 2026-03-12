@@ -164,9 +164,9 @@ spec:
                   name: {{ .Values.oauth2.clientSecretRef.name | default (printf "%s-oauth2-cli" .Release.Name) }}
                   key: {{ .Values.oauth2.clientSecretRef.key }}
             {{- end }}
-            {{- if and .Values.oauth2.workloadAPI.enabled .Values.oauth2.privateJWT.enabled }}
+            {{- if .Values.oauth2.privateJWT.enabled }}
             - name: OAUTH2_PRIVATE_JWT_KEY
-              value: {{ dict "source" .Values.oauth2.privateJWT.source "key_id" (.Values.oauth2.privateJWT.keyId | default .Release.Name) "audience" (.Values.oauth2.privateJWT.audience | default (printf "%s/oauth2/token" (trimSuffix "/" .Values.oauth2.serviceUri))) "spiffe_id" (.Values.oauth2.privateJWT.spiffeID | default (printf "spiffe://%s/ns/%s/sa/%s" .Values.oauth2.workloadAPI.trustDomain .Release.Namespace $serviceAccountName)) "hint" .Values.oauth2.privateJWT.hint | toJson | quote }}
+              value: {{ dict "source" .Values.oauth2.privateJWT.source "signer_url" (.Values.oauth2.privateJWT.signerUrl | default "") "key_id" (.Values.oauth2.privateJWT.keyId | default .Release.Name) "audience" (.Values.oauth2.privateJWT.audience | default (printf "%s/oauth2/token" (trimSuffix "/" .Values.oauth2.serviceUri))) "spiffe_id" (.Values.oauth2.privateJWT.spiffeID | default (printf "spiffe://%s/ns/%s/sa/%s" (.Values.oauth2.workloadAPI.trustDomain | default "") .Release.Namespace $serviceAccountName)) "hint" .Values.oauth2.privateJWT.hint | toJson | quote }}
             {{- end }}
             {{- if .Values.oauth2.audience }}
             - name: OAUTH2_SERVICE_AUDIENCE
