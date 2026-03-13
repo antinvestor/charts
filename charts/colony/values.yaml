@@ -222,7 +222,7 @@ oauth2:
     signerApiKeyRef:
       name: ""  # Secret name containing the API key for signer endpoint authentication
       key: psk  # Key in the secret (default: psk)
-    keyId: ""  # Defaults to release name
+    keyId: ""  # Defaults to hydra.openid.id-token
     audience: ""  # Defaults to {serviceUri}/oauth2/token
     spiffeID: ""  # Auto-constructed from workloadAPI.trustDomain + namespace + serviceAccount
     hint: ""
