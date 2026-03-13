@@ -219,6 +219,9 @@ oauth2:
     enabled: false
     source: url  # workload_api or url
     signerUrl: ""  # JWKS URL for fetching signing keys (e.g. Hydra admin /admin/keys/{set})
+    signerApiKeyRef:
+      name: ""  # Secret name containing the API key for signer endpoint authentication
+      key: psk  # Key in the secret (default: psk)
     keyId: ""  # Defaults to release name
     audience: ""  # Defaults to {serviceUri}/oauth2/token
     spiffeID: ""  # Auto-constructed from workloadAPI.trustDomain + namespace + serviceAccount
