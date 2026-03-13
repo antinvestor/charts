@@ -6,6 +6,9 @@
 # Example: helm install myservice ./colony -n <namespace>
 # This creates a service named 'myservice' in the specified namespace
 
+# Cluster name for Kubernetes metadata (exposed as K8S_CLUSTER_NAME env var)
+clusterName: ""
+
 # Image configuration
 image:
   repository: "ghcr.io/antinvestor/example-service"  # Required: Set to your service repository

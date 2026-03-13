@@ -191,6 +191,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            {{- if .Values.clusterName }}
+            - name: K8S_CLUSTER_NAME
+              value: {{ .Values.clusterName | quote }}
+            {{- end }}
             
             # OpenTelemetry configuration
             {{- if .Values.opentelemetry.enabled }}
