@@ -157,12 +157,6 @@ spec:
             {{- if .Values.oauth2.clientSecret }}
             - name: OAUTH2_SERVICE_CLIENT_SECRET
               value: {{ .Values.oauth2.clientSecret }}
-            {{- else }}
-            - name: OAUTH2_SERVICE_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.oauth2.clientSecretRef.name | default (printf "%s-oauth2-cli" .Release.Name) }}
-                  key: {{ .Values.oauth2.clientSecretRef.key }}
             {{- end }}
             {{- if .Values.oauth2.privateJWT.enabled }}
             - name: OAUTH2_PRIVATE_JWT_KEY
