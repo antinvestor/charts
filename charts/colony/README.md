@@ -188,7 +188,7 @@ oauth2:
   clientSecretRef:
     name: ""  # Defaults to {release-name}-oauth2-cli
     key: client-secret
-  audience: "service_notifications,service_profile"
+  audience: "service_notification,service_profile"
   jwtVerifyAudience: "service_myservice"
 ```
 
@@ -380,7 +380,7 @@ gateway:
 
 oauth2:
   enabled: true
-  audience: "service_notifications"
+  audience: "service_notification"
 ```
 
 ## Troubleshooting
