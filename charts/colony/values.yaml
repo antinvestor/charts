@@ -230,6 +230,11 @@ oauth2:
   audience: ""  # Services this service can access
   jwtVerifyAudience: ""  # This service's audience (defaults to {release-name})
 
+# Logging configuration
+logging:
+  level: "info"   # Log level: debug, info, warn, error
+  format: "json"  # Output format: text (colored, dev), json (structured, production)
+
 # OpenTelemetry configuration
 opentelemetry:
   enabled: true
