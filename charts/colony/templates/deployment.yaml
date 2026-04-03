@@ -115,6 +115,12 @@ spec:
           envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- $userEnvNames := dict }}
+          {{- range .Values.env }}
+          {{- if .name }}
+          {{- $_ := set $userEnvNames .name true }}
+          {{- end }}
+          {{- end }}
           env:
             # Service ports
             {{- if .Values.service.http.enabled }}
@@ -203,13 +209,13 @@ spec:
               value: {{ .Values.clusterName | quote }}
             {{- end }}
             
-            # Logging configuration
+            # Logging configuration (skipped if already defined in .Values.env)
             {{- if .Values.logging }}
-            {{- if .Values.logging.level }}
+            {{- if and .Values.logging.level (not (hasKey $userEnvNames "LOG_LEVEL")) }}
             - name: LOG_LEVEL
               value: {{ .Values.logging.level | quote }}
             {{- end }}
-            {{- if .Values.logging.format }}
+            {{- if and .Values.logging.format (not (hasKey $userEnvNames "LOG_FORMAT")) }}
             - name: LOG_FORMAT
               value: {{ .Values.logging.format | quote }}
             {{- end }}
