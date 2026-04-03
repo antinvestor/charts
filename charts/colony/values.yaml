@@ -353,8 +353,8 @@ migration:
   args: ["migrate"]
   env: []
   ttlSecondsAfterFinished: 300
-  backoffLimit: 15
-  activeDeadlineSeconds: 1800
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
   resources:
     requests:
       memory: "128Mi"
