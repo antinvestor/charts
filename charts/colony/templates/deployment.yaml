@@ -247,6 +247,14 @@ spec:
               value: {{ .Values.opentelemetry.insecure | quote }}
             {{- end }}
             
+            # Permission manifest registration
+            {{- if .Values.permissionsRegistrationUrl }}
+            {{- if not (hasKey $userEnvNames "PERMISSIONS_REGISTRATION_URL") }}
+            - name: PERMISSIONS_REGISTRATION_URL
+              value: {{ .Values.permissionsRegistrationUrl | quote }}
+            {{- end }}
+            {{- end }}
+
             # Additional environment variables
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}

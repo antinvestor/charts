@@ -382,6 +382,11 @@ envFrom: []
 # - secretRef:
 #     name: app-secrets
 
+# Permission manifest registration URL — services auto-register their
+# permission namespace at startup by POSTing to this endpoint on the
+# tenancy service. Set to empty string to disable.
+permissionsRegistrationUrl: "http://service-authentication.auth.svc:80/_internal/register/permissions"
+
 # Additional environment variables
 env: []
 # Example:
