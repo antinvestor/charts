@@ -1,0 +1,40 @@
+suite: Deployment
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: uses repository:tag when no digest
+    set:
+      sources: [{ slug: x, title: X, url: /x/swagger.json }]
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: '^scalarapi/api-reference:'
+
+  - it: uses repository@digest when digest set
+    set:
+      sources: [{ slug: x, title: X, url: /x/swagger.json }]
+      image:
+        digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: '^scalarapi/api-reference@sha256:'
+
+  - it: renders init container when tenants present
+    set:
+      sources: [{ slug: x, title: X, url: /x/swagger.json }]
+      tenants:
+        - { hostname: api.antinvestor.com }
+    asserts:
+      - exists:
+          path: spec.template.spec.initContainers[0]
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: tenant-router-config
+
+  - it: omits init container when no tenants
+    set:
+      sources: [{ slug: x, title: X, url: /x/swagger.json }]
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers

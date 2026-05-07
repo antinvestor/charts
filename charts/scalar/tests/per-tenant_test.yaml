@@ -1,0 +1,12 @@
+suite: Schema rejection
+templates:
+  - templates/configmap-config.yaml
+tests:
+  - it: schema rejects sourcesFilter referencing unknown slug
+    set:
+      sources: [{ slug: known, title: Known, url: /known/swagger.json }]
+      tenants:
+        - { hostname: x.example.com, sourcesFilter: [unknown] }
+    asserts:
+      - failedTemplate:
+          errorMessage: "tenant sourcesFilter references unknown source slug 'unknown'"
