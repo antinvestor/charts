@@ -1,0 +1,12 @@
+{{- if and .Values.customCss (not .Values.customCssConfigMapRef) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-css
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "scalar.labels" . | nindent 4 }}
+data:
+  custom.css: |
+{{ .Values.customCss | indent 4 }}
+{{- end -}}
