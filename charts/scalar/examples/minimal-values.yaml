@@ -1,0 +1,8 @@
+sources:
+  - slug: profile
+    title: Profile API
+    url: /profile/swagger.json
+    default: true
+  - slug: files
+    title: Files API
+    url: /files/swagger.json

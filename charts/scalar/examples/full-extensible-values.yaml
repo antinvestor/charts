@@ -1,0 +1,43 @@
+service:
+  name: service-api
+
+theme: default
+layout: modern
+
+groups:
+  identity:       { label: Identity,       order: 1, color: "#1976d2" }
+  platform:       { label: Platform,       order: 2, color: "#10b981" }
+  finance:        { label: Finance,        order: 3, color: "#f59e0b" }
+  communications: { label: Communications, order: 4, color: "#7c3aed" }
+  operations:     { label: Operations,     order: 5, color: "#64748b" }
+
+sources:
+  - { slug: profile,      group: identity,       title: "Profile API",      description: "User management & authentication",  url: /profile/swagger.json, default: true }
+  - { slug: tenancy,      group: identity,       title: "Tenancy API",      description: "Multi-tenant org management",        url: /tenancy/swagger.json }
+  - { slug: tenancy-keys, group: identity,       title: "Tenancy API Keys", description: "Client API key management",          url: /tenancy/api/key/swagger.json }
+  - { slug: files,        group: platform,       title: "Files API",        description: "File management & storage",          url: /files/swagger.json }
+  - { slug: devices,      group: platform,       title: "Devices API",      description: "Device registration & monitoring",   url: /devices/swagger.json }
+  - { slug: settings,     group: platform,       title: "Settings API",     description: "Configuration & preferences",        url: /settings/swagger.json }
+  - { slug: ledger,       group: finance,        title: "Ledger API",       description: "Financial transactions & accounting", url: /ledger/swagger.json }
+  - { slug: payment,      group: finance,        title: "Payment API",      description: "Payment processing & gateways",      url: /payment/swagger.json }
+  - { slug: notification, group: communications, title: "Notification API", description: "Push notifications & messaging",     url: /notification/swagger.json }
+
+landing:
+  enabled: true
+  hero:
+    title: "Antinvestor APIs"
+    tagline: "APIs powering modern distributed financial systems"
+
+customCss: |
+  :root { --scalar-color-accent: #1976d2; }
+
+customization:
+  showSidebar: true
+  persistAuth: true
+  defaultOpenAllTags: false
+  tagsSorter: alpha
+  operationsSorter: method
+
+preInstallValidation:
+  enabled: true
+  gatewayHost: api.stawi.org
