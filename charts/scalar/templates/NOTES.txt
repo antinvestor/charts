@@ -1,0 +1,12 @@
+Scalar API Reference {{ .Chart.Version }} (app: {{ include "scalar.imageTag" . }}) installed.
+
+Service:        {{ include "scalar.serviceName" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port | default 80 }}
+Sources:        {{ len .Values.sources }} OpenAPI specs registered
+Theme:          {{ .Values.theme }} ({{ .Values.layout }} layout)
+Tenants:        {{ if .Values.tenants }}{{ len .Values.tenants }} per-host overrides{{ else }}none{{ end }}
+
+Verify in cluster:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "scalar.serviceName" . }} 8080:{{ .Values.service.port | default 80 }}
+  curl -s http://localhost:8080/configs/config.json | jq '.sources | length'
+
+Add a service to the catalog: append an entry to .Values.sources in your HelmRelease values.
