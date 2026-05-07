@@ -1,0 +1,50 @@
+{{- if .Values.landing.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-landing
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "scalar.labels" . | nindent 4 }}
+data:
+  landing.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>{{ .Values.landing.hero.title | default "API Documentation" }}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      {{- if or .Values.customCss .Values.customCssConfigMapRef }}
+      <link rel="stylesheet" href="/styles/custom.css" />
+      {{- end }}
+    </head>
+    <body>
+      <header class="hero">
+        <h1>{{ .Values.landing.hero.title | default "API Documentation" }}</h1>
+        <p>{{ .Values.landing.hero.tagline | default "" }}</p>
+      </header>
+      <main class="catalog">
+        {{- $cards := .Values.landing.cards }}
+        {{- if not $cards }}
+          {{- $cards = list }}
+          {{- range .Values.sources }}
+            {{- if not .hidden }}
+              {{- $cards = append $cards (dict "slug" .slug "title" .title "description" (.description | default "") "group" (.group | default "")) }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- range $cards }}
+        <a class="card" href="#{{ .slug }}">
+          <h3>{{ .title }}</h3>
+          <p>{{ .description }}</p>
+        </a>
+        {{- end }}
+      </main>
+      <div id="scalar-app"></div>
+      <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+      <script>
+        Scalar.createApiReference('#scalar-app', { configurationUrl: '/configs/config.json' });
+      </script>
+    </body>
+    </html>
+{{- end -}}
