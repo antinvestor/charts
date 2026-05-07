@@ -1,0 +1,111 @@
+# Default values for the scalar chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into templates.
+
+image:
+  repository: scalarapi/api-reference
+  tag: latest
+  digest: ""
+  pullPolicy: IfNotPresent
+
+replicas: 2
+resources:
+  requests: { cpu: 10m, memory: 80Mi }
+  limits:   { cpu: 200m, memory: 400Mi }
+
+service:
+  name: service-api
+  port: 80
+  targetPort: 8080
+
+# ──── Catalog ────────────────────────────────────────────────────────────────
+sources:
+  - slug: profile
+    title: "Profile API"
+    description: "User management & authentication"
+    icon: "user"
+    group: identity
+    url: /profile/swagger.json
+    default: true
+  - slug: tenancy
+    title: "Tenancy API"
+    group: identity
+    url: /tenancy/swagger.json
+
+groups:
+  identity:       { label: "Identity",       order: 1, color: "#1976d2" }
+  platform:       { label: "Platform",       order: 2, color: "#10b981" }
+  finance:        { label: "Finance",        order: 3, color: "#f59e0b" }
+  communications: { label: "Communications", order: 4, color: "#7c3aed" }
+  operations:     { label: "Operations",     order: 5, color: "#64748b" }
+
+# ──── Theming ────────────────────────────────────────────────────────────────
+theme: default
+layout: modern
+darkMode: auto
+
+customCss: |
+  :root {
+    --scalar-color-accent: #1976d2;
+  }
+# Use when CSS is too large for inline or maintained in a separate ConfigMap
+# customCssConfigMapRef:
+#   name: scalar-extra-css
+#   key: custom.css
+
+# ──── Landing page ───────────────────────────────────────────────────────────
+landing:
+  enabled: true
+  hero:
+    title: "Antinvestor APIs"
+    tagline: "APIs powering modern distributed financial systems"
+  cards: []
+
+# ──── Customization (passed to API_REFERENCE_CONFIG) ─────────────────────────
+customization:
+  showSidebar: true
+  hideModels: false
+  hideSearch: false
+  defaultOpenAllTags: false
+  persistAuth: true
+  expandAllResponses: false
+  hiddenClients: [] # List of code-snippet client types to hide (e.g., ["curl", "python"])
+  tagsSorter: alpha
+  operationsSorter: method
+
+# ──── Per-tenant overrides ───────────────────────────────────────────────────
+tenants: []
+
+# ──── Reserved (no-op for now) ───────────────────────────────────────────────
+agent: { enabled: false }
+mcp:   { enabled: false }
+
+# ──── Standard infra blocks ──────────────────────────────────────────────────
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+
+observability:
+  serviceMonitor:
+    enabled: false
+
+gateway:
+  enabled: false
+  hostnames: []
+  parentRef:
+    name: default
+    namespace: gateway
+    sectionName: https
+  pathPrefix: /
+  cors:
+    allowOrigins: ["*"]
