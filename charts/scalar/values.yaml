@@ -109,3 +109,7 @@ gateway:
   pathPrefix: /
   cors:
     allowOrigins: ["*"]
+
+preInstallValidation:
+  enabled: true
+  gatewayHost: api.stawi.org
