@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "scalar.labels" . | nindent 4 }}
+  annotations:
+    configmap.reloader.stakater.com/reload: {{ printf "%s-config" .Release.Name }}{{ if and .Values.customCss (not .Values.customCssConfigMapRef) }},{{ printf "%s-css" .Release.Name }}{{ end }}{{ if .Values.landing.enabled }},{{ printf "%s-landing" .Release.Name }}{{ end }}
+spec:
+  replicas: {{ .Values.replicas | default 2 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "scalar.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "scalar.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      {{- if .Values.tenants }}
+      initContainers:
+        - name: tenant-router-config
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cat > /shared/host-router.conf <<'EOF'
+              {{- range .Values.tenants }}
+              if ($host = "{{ .hostname }}") {
+                set $config_file "/configs/config.{{ .hostname }}.json";
+              }
+              {{- end }}
+              EOF
+          volumeMounts:
+            - name: shared-config
+              mountPath: /shared
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+      {{- end }}
+      containers:
+        - name: scalar
+          image: {{ include "scalar.imageRef" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort | default 8080 }}
+              protocol: TCP
+          env:
+            - name: API_REFERENCE_CONFIG_FILE
+              value: /configs/config.json
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: configs
+              mountPath: /configs
+              readOnly: true
+            {{- if .Values.landing.enabled }}
+            - name: landing
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: landing.html
+              readOnly: true
+            {{- end }}
+            {{- if or .Values.customCss .Values.customCssConfigMapRef }}
+            - name: css
+              mountPath: /usr/share/nginx/html/styles
+              readOnly: true
+            {{- end }}
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-tmp
+              mountPath: /tmp
+            {{- if .Values.tenants }}
+            - name: shared-config
+              mountPath: /etc/nginx/conf.d/host-router.conf
+              subPath: host-router.conf
+              readOnly: true
+            {{- end }}
+          livenessProbe:
+            httpGet: { path: /, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /configs/config.json, port: http }
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet: { path: /, port: http }
+            periodSeconds: 5
+            failureThreshold: 30
+      volumes:
+        - name: configs
+          configMap:
+            name: {{ .Release.Name }}-config
+        {{- if .Values.landing.enabled }}
+        - name: landing
+          configMap:
+            name: {{ .Release.Name }}-landing
+        {{- end }}
+        {{- if .Values.customCss }}
+        {{- if not .Values.customCssConfigMapRef }}
+        - name: css
+          configMap:
+            name: {{ .Release.Name }}-css
+        {{- end }}
+        {{- end }}
+        {{- with .Values.customCssConfigMapRef }}
+        - name: css
+          configMap:
+            name: {{ .name }}
+        {{- end }}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-tmp
+          emptyDir: {}
+        {{- if .Values.tenants }}
+        - name: shared-config
+          emptyDir: {}
+        {{- end }}
