@@ -36,10 +36,11 @@ spec:
             - sh
             - -ec
             - |
-              # Validate JSON config syntax
-              echo '{{ include "scalar.renderConfig" (dict "Values" .Values "tenant" dict) }}' \
-                | sed 's/^[ ]*//' \
-                | jq -e '.sources | length > 0' \
+              # Write rendered config to file to avoid shell quoting issues
+              cat > /tmp/config.json <<'JSONEOF'
+              {{ include "scalar.renderConfig" (dict "Values" .Values "tenant" dict) }}
+              JSONEOF
+              jq -e '.sources | length > 0' < /tmp/config.json \
                 || (echo "Rendered config has no sources"; exit 1)
 
               # Probe each source URL through the gateway
@@ -64,4 +65,10 @@ spec:
           resources:
             requests: { cpu: 10m, memory: 32Mi }
             limits:   { cpu: 200m, memory: 128Mi }
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
 {{- end -}}
