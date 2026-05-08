@@ -58,30 +58,9 @@
     "layout":  { "type": "string", "enum": ["modern", "classic"] },
     "darkMode": { "type": "string", "enum": ["auto", "light", "dark", "force-light", "force-dark"] },
     "customCss": { "type": "string" },
-    "customCssConfigMapRef": {
-      "type": "object",
-      "required": ["name", "key"],
-      "properties": {
-        "name": { "type": "string" },
-        "key":  { "type": "string" }
-      }
-    },
-    "landing": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean" },
-        "hero": {
-          "type": "object",
-          "properties": {
-            "title":   { "type": "string" },
-            "tagline": { "type": "string" }
-          }
-        },
-        "cards": { "type": "array" }
-      }
-    },
     "customization": { "type": "object" },
     "tenants": {
+      "description": "Reserved for future per-host configuration; no-op in v0.1.",
       "type": "array",
       "items": {
         "type": "object",
@@ -89,7 +68,6 @@
         "properties": {
           "hostname": { "type": "string", "format": "hostname" },
           "theme":    { "type": "string" },
-          "landing":  { "type": "object" },
           "sourcesFilter": {
             "type": "array",
             "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
@@ -103,6 +81,13 @@
     "pdb": { "type": "object" },
     "networkPolicy": { "type": "object" },
     "observability": { "type": "object" },
-    "gateway": { "type": "object" }
+    "gateway": { "type": "object" },
+    "preInstallValidation": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "gatewayHost": { "type": "string", "minLength": 1 }
+      }
+    }
   }
 }

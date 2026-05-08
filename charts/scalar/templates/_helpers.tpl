@@ -51,13 +51,14 @@ Service name (defaults to Release.Name; override allows preserving "service-api"
 {{- end -}}
 
 {{/*
-Render the API_REFERENCE_CONFIG JSON for a given context. If a tenant is passed
-via .tenant, its overrides are merged. Returns a single-line JSON string.
-Validates tenant.sourcesFilter slugs exist in .Values.sources; fails otherwise.
+Render the API_REFERENCE_CONFIG JSON. The .tenant argument is accepted for
+call-site compatibility but is ignored in v0.1 (per-host routing is reserved
+for a future release). Returns a single-line JSON string suitable for use as
+the API_REFERENCE_CONFIG environment variable consumed by Caddy's template
+module in the scalarapi/api-reference image.
 */}}
 {{- define "scalar.renderConfig" -}}
 {{- $values := .Values -}}
-{{- $tenant := .tenant | default dict -}}
 {{- $base := dict
   "theme"       $values.theme
   "layout"      $values.layout
@@ -71,34 +72,11 @@ Validates tenant.sourcesFilter slugs exist in .Values.sources; fails otherwise.
   "hiddenClients" (default (list) (dig "hiddenClients" (list) $values.customization))
   "tagsSorter" (default "alpha" (dig "tagsSorter" "alpha" $values.customization))
   "operationsSorter" (default "method" (dig "operationsSorter" "method" $values.customization))
+  "sources" $values.sources
 -}}
-{{- /* Build set of available slugs for validation */ -}}
-{{- $availableSlugs := list -}}
-{{- range $values.sources -}}
-  {{- $availableSlugs = append $availableSlugs .slug -}}
+{{- /* Include customCss inline when set; Scalar JS picks it up from the config object. */ -}}
+{{- if $values.customCss -}}
+  {{- $_ := set $base "customCss" $values.customCss -}}
 {{- end -}}
-{{- /* Apply tenant overrides */ -}}
-{{- $sources := $values.sources -}}
-{{- with $tenant.sourcesFilter -}}
-  {{- $allowed := . -}}
-  {{- /* Validate each filtered slug exists */ -}}
-  {{- range $allowed -}}
-    {{- if not (has . $availableSlugs) -}}
-      {{- fail (printf "tenant sourcesFilter references unknown source slug '%s'" .) -}}
-    {{- end -}}
-  {{- end -}}
-  {{- /* Filter sources to only those allowed */ -}}
-  {{- $filtered := list -}}
-  {{- range $values.sources -}}
-    {{- if has .slug $allowed -}}
-      {{- $filtered = append $filtered . -}}
-    {{- end -}}
-  {{- end -}}
-  {{- $sources = $filtered -}}
-{{- end -}}
-{{- if $tenant.theme -}}
-  {{- $_ := set $base "theme" $tenant.theme -}}
-{{- end -}}
-{{- $_ := set $base "sources" $sources -}}
 {{- $base | toJson -}}
 {{- end -}}
