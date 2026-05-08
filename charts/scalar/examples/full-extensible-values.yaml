@@ -22,12 +22,6 @@ sources:
   - { slug: payment,      group: finance,        title: "Payment API",      description: "Payment processing & gateways",      url: /payment/swagger.json }
   - { slug: notification, group: communications, title: "Notification API", description: "Push notifications & messaging",     url: /notification/swagger.json }
 
-landing:
-  enabled: true
-  hero:
-    title: "Antinvestor APIs"
-    tagline: "APIs powering modern distributed financial systems"
-
 customCss: |
   :root { --scalar-color-accent: #1976d2; }
 

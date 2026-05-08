@@ -20,21 +20,34 @@ tests:
           path: spec.template.spec.containers[0].image
           pattern: '^scalarapi/api-reference@sha256:'
 
-  - it: renders init container when tenants present
+  - it: probes /health on all three probes
     set:
       sources: [{ slug: x, title: X, url: /x/swagger.json }]
-      tenants:
-        - { hostname: api.antinvestor.com }
     asserts:
-      - exists:
-          path: spec.template.spec.initContainers[0]
       - equal:
-          path: spec.template.spec.initContainers[0].name
-          value: tenant-router-config
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /health
 
-  - it: omits init container when no tenants
+  - it: runs as caddy UID 1000
     set:
       sources: [{ slug: x, title: X, url: /x/swagger.json }]
     asserts:
-      - notExists:
-          path: spec.template.spec.initContainers
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+
+  - it: sets API_REFERENCE_CONFIG env from configmap key
+    set:
+      sources: [{ slug: x, title: X, url: /x/swagger.json }]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: API_REFERENCE_CONFIG
+      - exists:
+          path: spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef

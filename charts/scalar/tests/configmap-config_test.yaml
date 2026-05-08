@@ -2,32 +2,30 @@ suite: ConfigMap config
 templates:
   - templates/configmap-config.yaml
 tests:
-  - it: renders one config.json for default and per-tenant
+  - it: renders one config.json with sources
     set:
       sources:
         - { slug: profile, title: Profile API, url: /profile/swagger.json, default: true }
-      tenants:
-        - { hostname: api.antinvestor.com, theme: purple }
+        - { slug: files,   title: Files API,   url: /files/swagger.json }
     asserts:
       - equal:
           path: kind
           value: ConfigMap
       - exists:
           path: data["config.json"]
-      - exists:
-          path: data["config.api.antinvestor.com.json"]
+      - matchRegex:
+          path: data["config.json"]
+          pattern: '"slug":"profile"'
+      - matchRegex:
+          path: data["config.json"]
+          pattern: '"slug":"files"'
 
-  - it: includes only sources for tenant when sourcesFilter is set
+  - it: includes customCss in rendered config when set
     set:
       sources:
-        - { slug: profile, title: Profile API, url: /profile/swagger.json }
-        - { slug: files,   title: Files API,   url: /files/swagger.json }
-      tenants:
-        - { hostname: api.antinvestor.com, sourcesFilter: [files] }
+        - { slug: x, title: X, url: /x/swagger.json }
+      customCss: ":root { --x: 1; }"
     asserts:
       - matchRegex:
-          path: data["config.api.antinvestor.com.json"]
-          pattern: '"slug":"files"'
-      - notMatchRegex:
-          path: data["config.api.antinvestor.com.json"]
-          pattern: '"slug":"profile"'
+          path: data["config.json"]
+          pattern: '"customCss":'
