@@ -6,10 +6,4 @@ metadata:
   labels:
     {{- include "scalar.labels" . | nindent 4 }}
 data:
-  {{/* Default config (used when tenants[] is empty or for non-matched hostnames) */}}
-  config.json: |
-    {{ include "scalar.renderConfig" (dict "Values" .Values "tenant" dict) }}
-  {{- range .Values.tenants }}
-  {{ printf "config.%s.json" .hostname }}: |
-    {{ include "scalar.renderConfig" (dict "Values" $.Values "tenant" .) }}
-  {{- end }}
+  config.json: {{ include "scalar.renderConfig" (dict "Values" .Values "tenant" dict) | quote }}

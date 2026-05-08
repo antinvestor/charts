@@ -44,22 +44,13 @@ theme: default
 layout: modern
 darkMode: auto
 
+# CSS injected into Scalar config; rendered into the API_REFERENCE_CONFIG JSON.
+# For larger files, set inline here as a multi-line string — there is no
+# separate ConfigMap reference for v0.1.
 customCss: |
   :root {
     --scalar-color-accent: #1976d2;
   }
-# Use when CSS is too large for inline or maintained in a separate ConfigMap
-# customCssConfigMapRef:
-#   name: scalar-extra-css
-#   key: custom.css
-
-# ──── Landing page ───────────────────────────────────────────────────────────
-landing:
-  enabled: true
-  hero:
-    title: "Antinvestor APIs"
-    tagline: "APIs powering modern distributed financial systems"
-  cards: []
 
 # ──── Customization (passed to API_REFERENCE_CONFIG) ─────────────────────────
 customization:
@@ -73,10 +64,8 @@ customization:
   tagsSorter: alpha
   operationsSorter: method
 
-# ──── Per-tenant overrides ───────────────────────────────────────────────────
-tenants: []
-
 # ──── Reserved (no-op for now) ───────────────────────────────────────────────
+# tenants: []   # Reserved for future per-host configuration; no-op in v0.1.
 agent: { enabled: false }
 mcp:   { enabled: false }
 
