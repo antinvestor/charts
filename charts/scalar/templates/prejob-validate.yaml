@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: validate
-          image: alpine/curl:8.6.0
+          image: {{ .Values.preInstallValidation.image | default "alpine/curl:8.17.0" }}
           command:
             - sh
             - -ec
