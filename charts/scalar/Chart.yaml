@@ -2,7 +2,7 @@ apiVersion: v2
 name: scalar
 description: Scalar API Reference (multi-spec OpenAPI documentation) for the Antinvestor platform
 type: application
-version: 0.1.2
+version: 0.1.3
 # Tracks scalarapi/api-reference Docker tag; bumped by renovate-style automation.
 appVersion: "1.0.0"
 keywords:
