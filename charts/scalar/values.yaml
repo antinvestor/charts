@@ -102,3 +102,4 @@ gateway:
 preInstallValidation:
   enabled: true
   gatewayHost: api.stawi.org
+  image: alpine/curl:8.17.0
