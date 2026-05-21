@@ -385,7 +385,7 @@ envFrom: []
 # Permission manifest registration URL — services auto-register their
 # permission namespace at startup by POSTing to this endpoint on the
 # tenancy service. Set to empty string to disable.
-permissionsRegistrationUrl: "http://service-tenancy.auth.svc:80/_internal/register/permissions"
+permissionsRegistrationUrl: "http://service-tenancy.identity.svc:80/_internal/register/permissions"
 
 # Additional environment variables
 env: []
