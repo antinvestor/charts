@@ -211,8 +211,20 @@
         }
       }
     },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["enforced", "disabled"]
+        }
+      }
+    },
     "oauth2": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "enabled": {
           "type": "boolean"
@@ -234,6 +246,7 @@
         },
         "clientIdRef": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "name": {
               "type": "string"
@@ -246,6 +259,7 @@
         },
         "clientSecretRef": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "name": {
               "type": "string"
@@ -258,6 +272,7 @@
         },
         "workloadAPI": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "enabled": {
               "type": "boolean"
@@ -278,6 +293,7 @@
         },
         "privateJWT": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "enabled": {
               "type": "boolean"
@@ -294,27 +310,145 @@
             "keyId": {
               "type": "string"
             },
-            "audience": {
-              "type": "string"
+            "signerApiKeyRef": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {"type": "string"},
+                "key": {"type": "string"}
+              }
             },
             "spiffeID": {
               "type": "string"
             },
             "hint": {
               "type": "string"
-            },
-            "jwksPath": {
-              "type": "string"
             }
           }
         },
-        "audience": {
-          "type": "string"
+        "audienceBaseURL": {
+          "type": "string",
+          "pattern": "^(|https://[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(/[A-Za-z0-9._~-]+)*)$"
         },
-        "jwtVerifyAudience": {
-          "type": "string"
+        "resourcePath": {
+          "type": "string",
+          "pattern": "^(|/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*)$"
+        },
+        "requestedAudiencePaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$"
+          }
+        },
+        "clientAssertionAudience": {
+          "type": "string",
+          "pattern": "^(|https://[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(/[A-Za-z0-9._~-]+)+)$"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"enabled": {"const": true}},
+            "required": ["enabled"]
+          },
+          "then": {
+            "required": ["audienceBaseURL", "resourcePath", "clientAssertionAudience"],
+            "properties": {
+              "audienceBaseURL": {
+                "pattern": "^https://[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(/[A-Za-z0-9._~-]+)*$"
+              },
+              "resourcePath": {
+                "pattern": "^/[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)*$"
+              },
+              "clientAssertionAudience": {
+                "pattern": "^https://[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(/[A-Za-z0-9._~-]+)+$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "tokenEndpointAuthMethod": {"const": "private_key_jwt"}
+            },
+            "required": ["tokenEndpointAuthMethod"]
+          },
+          "then": {
+            "required": ["privateJWT"],
+            "properties": {
+              "privateJWT": {
+                "properties": {"enabled": {"const": true}},
+                "required": ["enabled"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "privateJWT": {
+                "properties": {"enabled": {"const": true}},
+                "required": ["enabled"]
+              }
+            },
+            "required": ["privateJWT"]
+          },
+          "then": {
+            "properties": {
+              "tokenEndpointAuthMethod": {"const": "private_key_jwt"}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "privateJWT": {
+                "properties": {
+                  "enabled": {"const": true},
+                  "source": {"const": "url"}
+                },
+                "required": ["enabled", "source"]
+              }
+            },
+            "required": ["privateJWT"]
+          },
+          "then": {
+            "properties": {
+              "privateJWT": {
+                "properties": {"signerUrl": {"minLength": 1}},
+                "required": ["signerUrl"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "privateJWT": {
+                "properties": {
+                  "enabled": {"const": true},
+                  "source": {"const": "workload_api"}
+                },
+                "required": ["enabled", "source"]
+              }
+            },
+            "required": ["privateJWT"]
+          },
+          "then": {
+            "properties": {
+              "workloadAPI": {
+                "properties": {
+                  "enabled": {"const": true},
+                  "trustDomain": {"minLength": 1}
+                },
+                "required": ["enabled", "trustDomain"]
+              }
+            }
+          }
+        }
+      ]
     },
     "opentelemetry": {
       "type": "object",

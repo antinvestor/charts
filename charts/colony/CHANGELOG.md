@@ -1,5 +1,22 @@
 # Colony Helm Chart Changelog
 
+## Version 2.0.0 - Canonical authentication and authorization contract (2026-06-29)
+
+### Breaking changes
+
+- Remove `oauth2.audience`, `oauth2.jwtVerifyAudience`, and `oauth2.privateJWT.audience`.
+- Require canonical `audienceBaseURL`, `resourcePath`, and `clientAssertionAudience` values when OAuth is enabled.
+- Render requested downstream recipients from `requestedAudiencePaths`.
+- Emit explicit `AUTHORIZATION_MODE`; the default is fail-closed `enforced`.
+- Reject unknown OAuth and private-JWT values through closed schemas.
+
+### Reliability and security
+
+- Render `clientSecretRef` for client-secret authentication; default the Secret name to `{release-name}-oauth2-cli`.
+- Keep the client assertion audience outside the private-JWT signer configuration.
+- Require consistent `private_key_jwt` method, signer source, and workload API settings.
+- Validate and smoke-test identical authentication settings in Deployments and migration Jobs.
+
 ## Version 1.6.5 - HTTPRoute customization (2026-02-26)
 - Add full HTTPRoute spec override and custom rules/hostnames for per-service routing.
 

@@ -62,6 +62,10 @@ gateway:
 
 oauth2:
   enabled: true
+  audienceBaseURL: https://api.example.org
+  resourcePath: /myservice
+  requestedAudiencePaths: []
+  clientAssertionAudience: https://oauth2.example.org/oauth2/token
   clientSecretRef:
     name: ""  # Defaults to {release-name}-oauth2-cli
     key: client-secret
@@ -188,9 +192,36 @@ oauth2:
   clientSecretRef:
     name: ""  # Defaults to {release-name}-oauth2-cli
     key: client-secret
-  audience: "service_notification,service_profile"
-  jwtVerifyAudience: "service_myservice"
+  audienceBaseURL: "https://api.stawi.org"
+  resourcePath: "/myservice"
+  requestedAudiencePaths: ["/notification", "/profile"]
+  clientAssertionAudience: "https://oauth2.stawi.org/oauth2/token"
 ```
+
+### Authorization mode
+
+Authorization is fail-closed by default:
+
+```yaml
+authorization:
+  mode: enforced
+```
+
+Use `disabled` only in explicit local-development or test values.
+
+### Migrating to Colony 2
+
+Colony 2 is a hard switch. Remove `oauth2.audience`, `oauth2.jwtVerifyAudience`, and `oauth2.privateJWT.audience`; the values schema rejects them.
+
+Configure the replacement fields explicitly whenever OAuth is enabled:
+
+- `oauth2.audienceBaseURL`: environment-specific canonical HTTPS API base
+- `oauth2.resourcePath`: stable path for the deployed resource service
+- `oauth2.requestedAudiencePaths`: stable downstream resource paths
+- `oauth2.clientAssertionAudience`: exact OAuth token endpoint URL
+- `authorization.mode`: `enforced` unless a local or test deployment intentionally disables authorization
+
+For client-secret authentication, Colony reads `oauth2.clientSecretRef` and defaults its name to `{release-name}-oauth2-cli`. For `private_key_jwt`, set both `oauth2.tokenEndpointAuthMethod: private_key_jwt` and `oauth2.privateJWT.enabled: true`; Colony does not mount a client secret in that mode.
 
 **Secret Creation:**
 ```bash
@@ -286,8 +317,10 @@ Colony automatically sets these environment variables:
 | `OAUTH2_SERVICE_ADMIN_URI` | `oauth2.adminUri` | OAuth2 admin URL |
 | `OAUTH2_SERVICE_CLIENT_ID` | Release name | OAuth2 client ID |
 | `OAUTH2_SERVICE_CLIENT_SECRET` | Secret | OAuth2 client secret |
-| `OAUTH2_SERVICE_AUDIENCE` | `oauth2.audience` | OAuth2 audience |
-| `OAUTH2_JWT_VERIFY_AUDIENCE` | `oauth2.jwtVerifyAudience` | JWT verification audience |
+| `OAUTH2_REQUESTED_AUDIENCES` | `oauth2.audienceBaseURL` + `oauth2.requestedAudiencePaths` | Downstream resource audiences |
+| `OAUTH2_RESOURCE_AUDIENCE` | `oauth2.audienceBaseURL` + `oauth2.resourcePath` | This resource server's canonical audience |
+| `OAUTH2_AUDIENCE_BASE_URL` | `oauth2.audienceBaseURL` | Configurable canonical audience base used by catalog-backed clients |
+| `OAUTH2_CLIENT_ASSERTION_AUDIENCE` | `oauth2.clientAssertionAudience` | OAuth token endpoint used by `private_key_jwt` |
 | `OTEL_SERVICE_NAME` | Release name | OpenTelemetry service name |
 | `OTEL_RESOURCE_ATTRIBUTES` | Auto-generated | OTEL attributes with K8s metadata |
 | `K8S_POD_NAME` | Downward API | Pod name |
@@ -380,7 +413,10 @@ gateway:
 
 oauth2:
   enabled: true
-  audience: "service_notification"
+  audienceBaseURL: "https://api.stawi.org"
+  resourcePath: "/profile"
+  requestedAudiencePaths: ["/notification"]
+  clientAssertionAudience: "https://oauth2.stawi.org/oauth2/token"
 ```
 
 ## Troubleshooting
