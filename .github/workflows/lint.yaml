@@ -22,3 +22,6 @@ jobs:
 
       - name: Lint
         run: helm lint charts/colony
+
+      - name: Test authentication contract
+        run: charts/colony/scripts/smoke-auth-contract.sh

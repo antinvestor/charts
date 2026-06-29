@@ -153,8 +153,12 @@ oauth2:
     name: ""  # Leave empty to use default: myservice-oauth2-cli
     key: client-secret
   
-  audience: "service_notification,service_profile"
-  jwtVerifyAudience: "service_myservice"
+  audienceBaseURL: "https://api.stawi.org"
+  resourcePath: "/myservice"
+  requestedAudiencePaths:
+    - "/notification"
+    - "/profile"
+  clientAssertionAudience: "https://oauth2.stawi.org/oauth2/token"
 
 # OpenTelemetry configuration
 opentelemetry:

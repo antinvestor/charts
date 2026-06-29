@@ -180,10 +180,14 @@ dnsConfig: {}
 #     - name: ndots
 #       value: "2"
 
+# Authorization is fail-closed by default. Use disabled only in explicit local
+# development or test values.
+authorization:
+  mode: enforced
 
 # OAuth2 configuration
 oauth2:
-  enabled: true
+  enabled: false
   serviceUri: https://oauth2.antinvestor.com
   adminUri: http://service-authentication-oauth2-hydra-admin.core:4445
 
@@ -223,12 +227,17 @@ oauth2:
       name: ""  # Secret name containing the API key for signer endpoint authentication
       key: psk  # Key in the secret (default: psk)
     keyId: ""  # Defaults to hydra.openid.id-token
-    audience: ""  # Defaults to {serviceUri}/oauth2/token
     spiffeID: ""  # Auto-constructed from workloadAPI.trustDomain + namespace + serviceAccount
     hint: ""
 
-  audience: ""  # Services this service can access
-  jwtVerifyAudience: ""  # This service's audience (defaults to {release-name})
+  # Canonical platform API base. Set per environment/cluster.
+  audienceBaseURL: ""
+  # Stable service path appended to audienceBaseURL, for example /profile.
+  resourcePath: ""
+  # Downstream service paths appended to audienceBaseURL.
+  requestedAudiencePaths: []
+  # OAuth token endpoint used as the private_key_jwt assertion audience.
+  clientAssertionAudience: ""
 
 # Logging configuration
 logging:

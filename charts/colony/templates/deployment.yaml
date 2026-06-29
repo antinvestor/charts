@@ -160,12 +160,15 @@ spec:
             - name: OAUTH2_SERVICE_CLIENT_ID
               value: {{ .Release.Name }}
             {{- end }}
-            {{- if .Values.oauth2.clientSecret }}
+            {{- if ne .Values.oauth2.tokenEndpointAuthMethod "private_key_jwt" }}
             - name: OAUTH2_SERVICE_CLIENT_SECRET
-              value: {{ .Values.oauth2.clientSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.oauth2.clientSecretRef.name | default (printf "%s-oauth2-cli" .Release.Name) }}
+                  key: {{ .Values.oauth2.clientSecretRef.key | default "client-secret" }}
             {{- end }}
             {{- if .Values.oauth2.privateJWT.enabled }}
-            {{- $jwtDict := dict "source" .Values.oauth2.privateJWT.source "signer_url" (.Values.oauth2.privateJWT.signerUrl | default "") "key_id" (.Values.oauth2.privateJWT.keyId | default "hydra.openid.id-token") "audience" (.Values.oauth2.privateJWT.audience | default (printf "%s/oauth2/token" (trimSuffix "/" .Values.oauth2.serviceUri))) "hint" .Values.oauth2.privateJWT.hint }}
+            {{- $jwtDict := dict "source" .Values.oauth2.privateJWT.source "signer_url" (.Values.oauth2.privateJWT.signerUrl | default "") "key_id" (.Values.oauth2.privateJWT.keyId | default "hydra.openid.id-token") "hint" .Values.oauth2.privateJWT.hint }}
             {{- if eq .Values.oauth2.privateJWT.source "workload_api" }}
             {{- $_ := set $jwtDict "spiffe_id" (.Values.oauth2.privateJWT.spiffeID | default (printf "spiffe://%s/ns/%s/sa/%s" (.Values.oauth2.workloadAPI.trustDomain | default "") .Release.Namespace $serviceAccountName)) }}
             {{- end }}
@@ -179,13 +182,24 @@ spec:
                   key: {{ .Values.oauth2.privateJWT.signerApiKeyRef.key | default "psk" }}
             {{- end }}
             {{- end }}
-            {{- if .Values.oauth2.audience }}
-            - name: OAUTH2_SERVICE_AUDIENCE
-              value: {{ .Values.oauth2.audience }}
+            {{- if .Values.oauth2.requestedAudiencePaths }}
+            {{- $requestedAudiences := list }}
+            {{- range .Values.oauth2.requestedAudiencePaths }}
+            {{- $requestedAudiences = append $requestedAudiences (include "colony.oauthAudience" (dict "base" $.Values.oauth2.audienceBaseURL "path" .)) }}
             {{- end }}
-            - name: OAUTH2_JWT_VERIFY_AUDIENCE
-              value: {{ .Values.oauth2.jwtVerifyAudience }}
+            - name: OAUTH2_REQUESTED_AUDIENCES
+              value: {{ join "," $requestedAudiences | quote }}
             {{- end }}
+            - name: OAUTH2_RESOURCE_AUDIENCE
+              value: {{ include "colony.oauthAudience" (dict "base" .Values.oauth2.audienceBaseURL "path" .Values.oauth2.resourcePath) | quote }}
+            - name: OAUTH2_AUDIENCE_BASE_URL
+              value: {{ include "colony.oauthAudienceBaseURL" .Values.oauth2.audienceBaseURL | quote }}
+            - name: OAUTH2_CLIENT_ASSERTION_AUDIENCE
+              value: {{ include "colony.oauthClientAssertionAudience" .Values.oauth2.clientAssertionAudience | quote }}
+            {{- end }}
+
+            - name: AUTHORIZATION_MODE
+              value: {{ required "authorization.mode is required" .Values.authorization.mode | quote }}
             
             # Kubernetes metadata via Downward API
             - name: K8S_POD_NAME
