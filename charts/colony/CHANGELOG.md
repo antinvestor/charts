@@ -1,5 +1,12 @@
 # Colony Helm Chart Changelog
 
+## Version 2.0.1 - Auto tenancy audience for permission registration (2026-07-11)
+
+- When `permissionsRegistrationUrl` is set, automatically append `/tenancy` to
+  `oauth2.requestedAudiencePaths` if missing.
+- Services only need to list business audiences; permission manifest registration
+  remains plug-and-play without per-app audience boilerplate.
+
 ## Version 2.0.0 - Canonical authentication and authorization contract (2026-06-29)
 
 ### Breaking changes
