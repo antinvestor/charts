@@ -182,9 +182,17 @@ spec:
                   key: {{ .Values.oauth2.privateJWT.signerApiKeyRef.key | default "psk" }}
             {{- end }}
             {{- end }}
-            {{- if .Values.oauth2.requestedAudiencePaths }}
+            {{- /* Permission registration needs the tenancy resource audience so
+                 services can call /_internal/register/permissions with a valid
+                 JWT. Inject /tenancy when registration is enabled so apps only
+                 configure their business audiences. */}}
+            {{- $requestedPaths := .Values.oauth2.requestedAudiencePaths | default list }}
+            {{- if and .Values.permissionsRegistrationUrl (not (has "/tenancy" $requestedPaths)) }}
+            {{- $requestedPaths = append $requestedPaths "/tenancy" }}
+            {{- end }}
+            {{- if $requestedPaths }}
             {{- $requestedAudiences := list }}
-            {{- range .Values.oauth2.requestedAudiencePaths }}
+            {{- range $requestedPaths }}
             {{- $requestedAudiences = append $requestedAudiences (include "colony.oauthAudience" (dict "base" $.Values.oauth2.audienceBaseURL "path" .)) }}
             {{- end }}
             - name: OAUTH2_REQUESTED_AUDIENCES
