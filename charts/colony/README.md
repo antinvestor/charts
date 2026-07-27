@@ -192,8 +192,8 @@ oauth2:
   clientSecretRef:
     name: ""  # Defaults to {release-name}-oauth2-cli
     key: client-secret
-  audienceBaseURL: "https://api.stawi.org"
-  resourcePath: "/myservice"
+  audienceBaseURL: "https://stawi.org"
+  resourcePath: "/myservice"  # → https://myservice.stawi.org
   requestedAudiencePaths: ["/notification", "/profile"]
   clientAssertionAudience: "https://oauth2.stawi.org/oauth2/token"
 ```
@@ -413,7 +413,7 @@ gateway:
 
 oauth2:
   enabled: true
-  audienceBaseURL: "https://api.stawi.org"
+  audienceBaseURL: "https://stawi.org"
   resourcePath: "/profile"
   requestedAudiencePaths: ["/notification"]
   clientAssertionAudience: "https://oauth2.stawi.org/oauth2/token"

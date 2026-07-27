@@ -153,7 +153,7 @@ oauth2:
     name: ""  # Leave empty to use default: myservice-oauth2-cli
     key: client-secret
   
-  audienceBaseURL: "https://api.stawi.org"
+  audienceBaseURL: "https://stawi.org"
   resourcePath: "/myservice"
   requestedAudiencePaths:
     - "/notification"
