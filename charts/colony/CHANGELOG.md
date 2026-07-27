@@ -1,10 +1,17 @@
 # Colony Helm Chart Changelog
 
+## Unreleased
+
+### Changed
+- OAuth resource audiences are path-form again: `audienceBaseURL` + `resourcePath`
+  → `https://api.stawi.org/profile` (not service subdomains). Keeps external
+  client token `aud` values stable on the unified API gateway.
+
+
 ## Version 2.0.2 - Subdomain resource audiences (2026-07-27)
 
-- Prefer `https://<service>.stawi.org` audiences from apex
-  `oauth2.audienceBaseURL` (e.g. `https://stawi.org` + `/profile` →
-  `https://profile.stawi.org`).
+- Prefer path-form audiences from `oauth2.audienceBaseURL` + `resourcePath`
+  (e.g. `https://api.stawi.org` + `/profile` → `https://api.stawi.org/profile`).
 - Auto-injected tenancy audience becomes `https://tenancy.<apex>`.
 - Path-style bases with a URL path still join as before (legacy).
 

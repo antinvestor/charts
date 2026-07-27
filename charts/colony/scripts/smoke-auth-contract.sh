@@ -7,16 +7,16 @@ chart_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 rendered=$(helm template auth-smoke "$chart_dir" \
   --namespace core \
   --set oauth2.enabled=true \
-  --set-string oauth2.audienceBaseURL=https://stawi.org \
+  --set-string oauth2.audienceBaseURL=https://api.stawi.org \
   --set-string oauth2.resourcePath=/authentication \
   --set-string 'oauth2.requestedAudiencePaths[0]=/profile' \
   --set-string 'oauth2.requestedAudiencePaths[1]=/tenancy' \
   --set-string oauth2.clientAssertionAudience=https://oauth2.stawi.org/oauth2/token \
   --set migration.enabled=true)
 
-grep -Fq 'value: "https://profile.stawi.org,https://tenancy.stawi.org"' <<<"$rendered"
-grep -Fq 'value: "https://authentication.stawi.org"' <<<"$rendered"
-grep -Fq 'value: "https://stawi.org"' <<<"$rendered"
+grep -Fq 'value: "https://api.stawi.org/profile,https://api.stawi.org/tenancy"' <<<"$rendered"
+grep -Fq 'value: "https://api.stawi.org/authentication"' <<<"$rendered"
+grep -Fq 'value: "https://api.stawi.org"' <<<"$rendered"
 grep -Fq 'value: "https://oauth2.stawi.org/oauth2/token"' <<<"$rendered"
 grep -Fq 'name: auth-smoke-oauth2-cli' <<<"$rendered"
 grep -Fq 'value: "enforced"' <<<"$rendered"
@@ -31,7 +31,7 @@ fi
 private_jwt=$(helm template auth-smoke "$chart_dir" \
   --namespace core \
   --set oauth2.enabled=true \
-  --set-string oauth2.audienceBaseURL=https://stawi.org \
+  --set-string oauth2.audienceBaseURL=https://api.stawi.org \
   --set-string oauth2.resourcePath=/authentication \
   --set-string oauth2.clientAssertionAudience=https://oauth2.stawi.org/oauth2/token \
   --set-string oauth2.tokenEndpointAuthMethod=private_key_jwt \
@@ -65,7 +65,7 @@ fi
 
 if helm template invalid "$chart_dir" \
   --set oauth2.enabled=true \
-  --set-string oauth2.audienceBaseURL=https://stawi.org \
+  --set-string oauth2.audienceBaseURL=https://api.stawi.org \
   --set-string oauth2.resourcePath=/profile \
   --set-string oauth2.clientAssertionAudience=https://oauth2.stawi.org/oauth2/token \
   --set-string oauth2.tokenEndpointAuthMethod=private_key_jwt >/dev/null 2>&1; then
