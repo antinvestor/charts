@@ -358,10 +358,12 @@ fluxcd:
     semver:
       range: ">=v0.0.1"
 
-# Migration job configuration
+# Setup job configuration (Frame setup plan: migrate + bootstrap + permissions + …)
 migration:
   enabled: false
-  args: ["migrate"]
+  # argv "setup" with no task list runs every registered step in registration order.
+  # Prefer this over legacy ["migrate"] (DO_MIGRATION well-known subset only).
+  args: ["setup"]
   env: []
   ttlSecondsAfterFinished: 300
   backoffLimit: 3

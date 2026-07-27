@@ -265,7 +265,7 @@ externalDNS:
 ```yaml
 migration:
   enabled: true
-  args: ["migrate"]
+  args: ["setup"]
   env: []
   ttlSecondsAfterFinished: 300
   backoffLimit: 2

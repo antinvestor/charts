@@ -245,7 +245,7 @@ fluxcd:
 # Migration job
 migration:
   enabled: true
-  args: ["migrate"]  # Container arguments
+  args: ["setup"]  # Full Frame setup plan (migrate/bootstrap/permissions/…)
   ttlSecondsAfterFinished: 300
   backoffLimit: 15
   activeDeadlineSeconds: 3600
