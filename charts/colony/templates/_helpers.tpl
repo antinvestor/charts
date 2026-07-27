@@ -53,8 +53,7 @@ Image tag (defaults to Chart.AppVersion if not set)
 {{- default .Chart.AppVersion .Values.image.tag -}}
 {{- end -}}
 {{/* Build and validate a canonical OAuth resource audience.
-     Subdomain form (preferred): base https://stawi.org + path /profile → https://profile.stawi.org
-     Legacy path form: base https://api.stawi.org/platform + path /profile → https://api.stawi.org/platform/profile
+     Path form (canonical): base https://api.stawi.org + path /profile → https://api.stawi.org/profile
 */}}
 {{- define "colony.oauthAudience" -}}
 {{- $base := include "colony.oauthAudienceBaseURL" .base -}}
@@ -63,13 +62,7 @@ Image tag (defaults to Chart.AppVersion if not set)
 {{- fail "OAuth audience resource paths must be a service label or canonical path without a trailing slash" -}}
 {{- end -}}
 {{- $path := trimPrefix "/" $raw -}}
-{{- /* Path-style base (has path segment after host): join. Host-only base: service label is subdomain. */ -}}
-{{- $baseHostPath := trimPrefix "https://" $base -}}
-{{- if contains "/" $baseHostPath -}}
 {{- printf "%s/%s" $base $path -}}
-{{- else -}}
-{{- printf "https://%s.%s" $path $baseHostPath -}}
-{{- end -}}
 {{- end -}}
 
 {{/* Validate the configurable canonical OAuth audience base URL. */}}

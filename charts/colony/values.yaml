@@ -230,8 +230,8 @@ oauth2:
     spiffeID: ""  # Auto-constructed from workloadAPI.trustDomain + namespace + serviceAccount
     hint: ""
 
-  # Platform audience apex (subdomain model). Example: https://stawi.org
-  # Combined with resourcePath /profile → https://profile.stawi.org
+  # Platform API audience base (path model). Example: https://api.stawi.org
+  # Combined with resourcePath /profile → https://api.stawi.org/profile
   audienceBaseURL: ""
   # This service's audience label/path, for example /profile or profile.
   resourcePath: ""
