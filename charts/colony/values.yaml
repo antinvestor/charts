@@ -230,12 +230,13 @@ oauth2:
     spiffeID: ""  # Auto-constructed from workloadAPI.trustDomain + namespace + serviceAccount
     hint: ""
 
-  # Canonical platform API base. Set per environment/cluster.
+  # Platform audience apex (subdomain model). Example: https://stawi.org
+  # Combined with resourcePath /profile → https://profile.stawi.org
   audienceBaseURL: ""
-  # Stable service path appended to audienceBaseURL, for example /profile.
+  # This service's audience label/path, for example /profile or profile.
   resourcePath: ""
-  # Downstream service paths appended to audienceBaseURL (business dependencies).
-  # When permissionsRegistrationUrl is set, colony automatically adds /tenancy so
+  # Downstream service labels/paths (business dependencies).
+  # When permissionsRegistrationUrl is set, colony automatically adds tenancy so
   # permission manifest registration works without per-service boilerplate.
   requestedAudiencePaths: []
   # OAuth token endpoint used as the private_key_jwt assertion audience.
@@ -358,10 +359,12 @@ fluxcd:
     semver:
       range: ">=v0.0.1"
 
-# Migration job configuration
+# Setup job configuration (Frame setup plan: migrate + bootstrap + permissions + …)
 migration:
   enabled: false
-  args: ["migrate"]
+  # argv "setup" with no task list runs every registered step in registration order.
+  # Prefer this over legacy ["migrate"] (DO_MIGRATION well-known subset only).
+  args: ["setup"]
   env: []
   ttlSecondsAfterFinished: 300
   backoffLimit: 3

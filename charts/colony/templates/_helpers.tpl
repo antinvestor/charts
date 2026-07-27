@@ -52,14 +52,24 @@ Image tag (defaults to Chart.AppVersion if not set)
 {{- define "colony.imageTag" -}}
 {{- default .Chart.AppVersion .Values.image.tag -}}
 {{- end -}}
-{{/* Build and validate a canonical OAuth resource audience. */}}
+{{/* Build and validate a canonical OAuth resource audience.
+     Subdomain form (preferred): base https://stawi.org + path /profile → https://profile.stawi.org
+     Legacy path form: base https://api.stawi.org/platform + path /profile → https://api.stawi.org/platform/profile
+*/}}
 {{- define "colony.oauthAudience" -}}
 {{- $base := include "colony.oauthAudienceBaseURL" .base -}}
-{{- $path := required "an OAuth audience resource path is required" .path -}}
-{{- if not (regexMatch "^/[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)*$" $path) -}}
-{{- fail "OAuth audience resource paths must be canonical absolute paths without a trailing slash" -}}
+{{- $raw := required "an OAuth audience resource path/service is required" .path -}}
+{{- if not (regexMatch "^/?[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)*$" $raw) -}}
+{{- fail "OAuth audience resource paths must be a service label or canonical path without a trailing slash" -}}
 {{- end -}}
-{{- printf "%s%s" $base $path -}}
+{{- $path := trimPrefix "/" $raw -}}
+{{- /* Path-style base (has path segment after host): join. Host-only base: service label is subdomain. */ -}}
+{{- $baseHostPath := trimPrefix "https://" $base -}}
+{{- if contains "/" $baseHostPath -}}
+{{- printf "%s/%s" $base $path -}}
+{{- else -}}
+{{- printf "https://%s.%s" $path $baseHostPath -}}
+{{- end -}}
 {{- end -}}
 
 {{/* Validate the configurable canonical OAuth audience base URL. */}}

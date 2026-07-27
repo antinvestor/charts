@@ -64,7 +64,8 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
-            - name: DO_MIGRATION
+            # Frame setup plan (prefer DO_SETUP over legacy DO_MIGRATION).
+            - name: DO_SETUP
               value: "true"
 
             {{- if .Values.oauth2.enabled }}
@@ -120,7 +121,7 @@ spec:
             {{- end }}
             {{- end }}
             {{- $requestedPaths := .Values.oauth2.requestedAudiencePaths | default list }}
-            {{- if and .Values.permissionsRegistrationUrl (not (has "/tenancy" $requestedPaths)) }}
+            {{- if and .Values.permissionsRegistrationUrl (not (or (has "/tenancy" $requestedPaths) (has "tenancy" $requestedPaths))) }}
             {{- $requestedPaths = append $requestedPaths "/tenancy" }}
             {{- end }}
             {{- if $requestedPaths }}

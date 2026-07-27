@@ -153,7 +153,7 @@ oauth2:
     name: ""  # Leave empty to use default: myservice-oauth2-cli
     key: client-secret
   
-  audienceBaseURL: "https://api.stawi.org"
+  audienceBaseURL: "https://stawi.org"
   resourcePath: "/myservice"
   requestedAudiencePaths:
     - "/notification"
@@ -245,7 +245,7 @@ fluxcd:
 # Migration job
 migration:
   enabled: true
-  args: ["migrate"]  # Container arguments
+  args: ["setup"]  # Full Frame setup plan (migrate/bootstrap/permissions/…)
   ttlSecondsAfterFinished: 300
   backoffLimit: 15
   activeDeadlineSeconds: 3600

@@ -184,10 +184,10 @@ spec:
             {{- end }}
             {{- /* Permission registration needs the tenancy resource audience so
                  services can call /_internal/register/permissions with a valid
-                 JWT. Inject /tenancy when registration is enabled so apps only
+                 JWT. Inject tenancy when registration is enabled so apps only
                  configure their business audiences. */}}
             {{- $requestedPaths := .Values.oauth2.requestedAudiencePaths | default list }}
-            {{- if and .Values.permissionsRegistrationUrl (not (has "/tenancy" $requestedPaths)) }}
+            {{- if and .Values.permissionsRegistrationUrl (not (or (has "/tenancy" $requestedPaths) (has "tenancy" $requestedPaths))) }}
             {{- $requestedPaths = append $requestedPaths "/tenancy" }}
             {{- end }}
             {{- if $requestedPaths }}

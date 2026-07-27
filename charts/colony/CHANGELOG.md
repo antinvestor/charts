@@ -1,5 +1,13 @@
 # Colony Helm Chart Changelog
 
+## Version 2.0.2 - Subdomain resource audiences (2026-07-27)
+
+- Prefer `https://<service>.stawi.org` audiences from apex
+  `oauth2.audienceBaseURL` (e.g. `https://stawi.org` + `/profile` →
+  `https://profile.stawi.org`).
+- Auto-injected tenancy audience becomes `https://tenancy.<apex>`.
+- Path-style bases with a URL path still join as before (legacy).
+
 ## Version 2.0.1 - Auto tenancy audience for permission registration (2026-07-11)
 
 - When `permissionsRegistrationUrl` is set, automatically append `/tenancy` to
